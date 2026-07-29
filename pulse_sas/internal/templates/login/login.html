@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Iniciar sesión · Pulse SAS{% endblock %}
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <img src="{% static 'icono/logo.svg' %}" alt="Pulse SAS" class="auth-logo">
+        <h1>Bienvenido de nuevo</h1>
+        <p>Ingresa tus datos para continuar</p>
+    </div>
+
+    {% if form.non_field_errors or messages %}
+    <ul class="auth-messages">
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+        {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_username">Usuario</label>
+            <div class="input-wrap">
+                <span class="input-icon" style="background-image:url('{% static "icono/user.svg" %}')"></span>
+                <input type="text" name="username" id="id_username" autofocus required
+                       value="{{ form.username.value|default:'' }}" placeholder="Tu usuario">
+            </div>
+            {% for error in form.username.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="id_password">Contraseña</label>
+            <div class="input-wrap">
+                <span class="input-icon" style="background-image:url('{% static "icono/lock.svg" %}')"></span>
+                <input type="password" name="password" id="id_password" required placeholder="Tu contraseña">
+                <button type="button" class="toggle-password" id="toggle_password"
+                        data-target="id_password"
+                        data-icon-show="{% static 'icono/eye.svg' %}"
+                        data-icon-hide="{% static 'icono/eye-off.svg' %}"
+                        style="background-image:url('{% static "icono/eye.svg" %}')"
+                        aria-label="Mostrar contraseña"></button>
+            </div>
+            {% for error in form.password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <button type="submit" class="btn-primary">Entrar</button>
+    </form>
+
+    <p class="auth-footer">¿No tienes cuenta? <a href="{% url 'registro' %}">Crear cuenta</a></p>
+</div>
+{% endblock %}
