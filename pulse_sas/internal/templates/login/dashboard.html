@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Panel · Pulse SAS{% endblock %}
+{% block content %}
+<div class="auth-card dashboard-card">
+    <div class="auth-header">
+        <img src="{% static 'icono/logo.svg' %}" alt="Pulse SAS" class="auth-logo">
+        <h1>Hola, {{ user.username }}</h1>
+        <p>Sesión iniciada correctamente</p>
+    </div>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn-secondary">Cerrar sesión</button>
+    </form>
+</div>
+{% endblock %}

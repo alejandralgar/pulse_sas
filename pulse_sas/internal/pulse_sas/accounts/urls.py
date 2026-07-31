@@ -1,0 +1,28 @@
+from django.urls import path
+
+from . import views
+from pulse_sas.internal.pulse_sas.personas import views as personas_views
+from pulse_sas.internal.pulse_sas.citas import views as citas_views
+
+urlpatterns = [
+    path('',                    views.login_view,         name='home'),
+    path('login/',              views.login_view,         name='login'),
+    path('logout/',             views.AccountsLogoutView.as_view(), name='logout'),
+    path('registro/',           views.registro,           name='registro'),
+    path('dashboard/',          views.dashboard,          name='dashboard'),
+
+    # Acceso directo por rol
+    path('dashboard/admin/',          views.vista_admin,         name='dashboard_admin'),
+    path('dashboard/administrativo/', views.vista_administrativo, name='dashboard_administrativo'),
+    path('dashboard/medico/',         views.vista_medico,        name='dashboard_medico'),
+    path('dashboard/enfermera/',      views.vista_enfermera,     name='dashboard_enfermera'),
+    path('dashboard/guardia/',        views.vista_guardia,       name='dashboard_guardia'),
+    path('dashboard/cliente/',        views.vista_cliente,       name='dashboard_cliente'),
+    path('dashboard/empresa/',        views.vista_empresa,       name='dashboard_empresa'),
+
+    # ── Cliente / Paciente ──────────────────────────────────────────
+    path('cliente/perfil/',           personas_views.actualizar_perfil,           name='cliente_perfil'),
+    path('cliente/contacto/',         personas_views.guardar_contacto_emergencia, name='cliente_contacto'),
+    path('cliente/cita/solicitar/',   citas_views.solicitar_cita,                 name='cliente_solicitar_cita'),
+    path('cliente/cita/horarios/',    citas_views.horarios_disponibles,           name='cliente_horarios'),
+]

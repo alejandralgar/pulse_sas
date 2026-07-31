@@ -1,0 +1,296 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Admin · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Principal</div>
+<nav>
+    <a href="#" class="active" onclick="showSection('resumen', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Resumen
+    </a>
+</nav>
+<div class="sidebar-section">Gestión</div>
+<nav>
+    <a href="#" onclick="showSection('roles', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Roles
+    </a>
+    <a href="#" onclick="showSection('usuarios', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Usuarios
+    </a>
+    <a href="#" onclick="showSection('citas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Calendario
+    </a>
+    <a href="#" onclick="showSection('convenios', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        Empresas / Convenios
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<!-- RESUMEN -->
+<section id="resumen" class="section-content">
+    <div class="page-header">
+        <h1>Panel de Administración</h1>
+        <p>Control total del sistema</p>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card blue">
+            <span class="stat-label">Usuarios</span>
+            <span class="stat-value">48</span>
+            <span class="stat-sub">registrados</span>
+        </div>
+        <div class="stat-card green">
+            <span class="stat-label">Citas hoy</span>
+            <span class="stat-value">12</span>
+            <span class="stat-sub">programadas</span>
+        </div>
+        <div class="stat-card orange">
+            <span class="stat-label">Médicos</span>
+            <span class="stat-value">8</span>
+            <span class="stat-sub">activos</span>
+        </div>
+        <div class="stat-card purple">
+            <span class="stat-label">Pacientes</span>
+            <span class="stat-value">235</span>
+            <span class="stat-sub">en sistema</span>
+        </div>
+    </div>
+
+    <!-- Tabla últimos usuarios -->
+    <div class="card">
+        <div class="card-title">Usuarios recientes</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Cédula</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>María García</td>
+                        <td>1098765432</td>
+                        <td><span class="badge badge-info">Médico</span></td>
+                        <td><span class="badge badge-success">Activo</span></td>
+                        <td><button class="btn btn-outline btn-sm">Ver</button></td>
+                    </tr>
+                    <tr>
+                        <td>Carlos López</td>
+                        <td>52312234</td>
+                        <td><span class="badge badge-gray">Paciente</span></td>
+                        <td><span class="badge badge-success">Activo</span></td>
+                        <td><button class="btn btn-outline btn-sm">Ver</button></td>
+                    </tr>
+                    <tr>
+                        <td>Luisa Fernández</td>
+                        <td>45678912</td>
+                        <td><span class="badge badge-warning">Enfermera</span></td>
+                        <td><span class="badge badge-success">Activo</span></td>
+                        <td><button class="btn btn-outline btn-sm">Ver</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ROLES -->
+<section id="roles" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Gestión de Roles</h1>
+        <p>Crea y administra los roles del sistema</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Crear Rol</div>
+        <form class="form-grid">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Nombre del Rol</label>
+                <input type="text" placeholder="Ej: Recepcionista">
+            </div>
+            <div class="form-group">
+                <label>Categoría</label>
+                <select>
+                    <option value="">Seleccionar...</option>
+                    <option>Admin</option>
+                    <option>Administrativo</option>
+                    <option>Médico</option>
+                    <option>Enfermera</option>
+                    <option>Guardia de seguridad</option>
+                    <option>Paciente</option>
+                    <option>Programador</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" placeholder="Breve descripción del rol">
+            </div>
+            <div class="form-full">
+                <button type="submit" class="btn btn-primary">Crear Rol</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Roles existentes</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Rol</th><th>Categoría</th><th>Usuarios asignados</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Médico</td><td><span class="badge badge-info">Médico</span></td><td>8</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
+                    <tr><td>Paciente</td><td><span class="badge badge-gray">Paciente</span></td><td>235</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
+                    <tr><td>Enfermera</td><td><span class="badge badge-warning">Enfermera</span></td><td>12</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
+                    <tr><td>Recepcionista</td><td><span class="badge badge-success">Administrativo</span></td><td>4</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
+                    <tr><td>Programador</td><td><span class="badge badge-danger">Mantenimiento</span></td><td>2</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- USUARIOS -->
+<section id="usuarios" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Registro de Usuarios</h1>
+        <p>Crea cuentas para todos los roles del sistema</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Nuevo Usuario</div>
+        <form class="form-grid">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" placeholder="Nombre completo">
+            </div>
+            <div class="form-group">
+                <label>Apellido</label>
+                <input type="text" placeholder="Apellido">
+            </div>
+            <div class="form-group">
+                <label>Cédula / Documento</label>
+                <input type="text" placeholder="Número de documento">
+            </div>
+            <div class="form-group">
+                <label>Correo</label>
+                <input type="email" placeholder="correo@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" placeholder="Número de celular">
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <select>
+                    <option value="">Seleccionar rol...</option>
+                    <option>Médico</option>
+                    <option>Enfermera</option>
+                    <option>Paciente</option>
+                    <option>Secretaria</option>
+                    <option>Recepcionista</option>
+                    <option>Guardia de seguridad</option>
+                    <option>Programador</option>
+                    <option>Admin</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Contraseña temporal</label>
+                <input type="password" placeholder="Contraseña inicial">
+            </div>
+            <div class="form-full">
+                <button type="submit" class="btn btn-primary">Registrar Usuario</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- CALENDARIO -->
+<section id="citas" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Calendario de Citas</h1>
+        <p>Visualiza las citas de pacientes, médicos y enfermeras</p>
+    </div>
+    {% include "partials/calendario.html" %}
+</section>
+
+<!-- CONVENIOS -->
+<section id="convenios" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Empresas y Convenios</h1>
+        <p>Gestiona las empresas con convenio institucional</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Registrar Empresa / Convenio</div>
+        <form class="form-grid">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Nombre de la Empresa</label>
+                <input type="text" placeholder="Razón social">
+            </div>
+            <div class="form-group">
+                <label>NIT</label>
+                <input type="text" placeholder="900.123.456-7">
+            </div>
+            <div class="form-group">
+                <label>Teléfono de Contacto</label>
+                <input type="tel" placeholder="Número de contacto">
+            </div>
+            <div class="form-group">
+                <label>Especialidad / Servicio</label>
+                <input type="text" placeholder="Ej: Cardiología, Pediatría">
+            </div>
+            <div class="form-full">
+                <button type="submit" class="btn btn-primary">Guardar Convenio</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Convenios registrados</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Empresa</th><th>NIT</th><th>Teléfono</th><th>Especialidad</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Sanitas EPS</td><td>800.123.456-1</td><td>6017001122</td>
+                        <td>General</td>
+                        <td><button class="btn btn-outline btn-sm">Editar</button></td>
+                    </tr>
+                    <tr>
+                        <td>Compensar</td><td>860.043.129-2</td><td>6015556677</td>
+                        <td>Pediatría</td>
+                        <td><button class="btn btn-outline btn-sm">Editar</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(id, el) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    return false;
+}
+</script>
+{% endblock %}

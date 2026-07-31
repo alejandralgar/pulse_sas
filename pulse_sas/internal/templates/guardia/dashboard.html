@@ -1,0 +1,114 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Guardia de Seguridad · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Control</div>
+<nav>
+    <a href="#" class="active" onclick="return showSection('salidas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Autorizaciones de Salida
+    </a>
+    <a href="#" onclick="return showSection('acompanantes', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Info Acompanantes
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<!-- AUTORIZACIONES -->
+<section id="salidas" class="section-content">
+    <div class="page-header">
+        <h1>Autorizaciones de Salida</h1>
+        <p>Verifica si un paciente tiene autorizacion medica para salir</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Buscar paciente</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Cedula o nombre del paciente</label>
+                <input type="text" placeholder="Ingrese numero de documento...">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <button class="btn btn-primary" style="margin-top:22px;">Verificar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Estado de autorizaciones</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Paciente</th><th>Cedula</th><th>Medico tratante</th><th>Autorizacion</th><th>Acompanante autorizado</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Carlos Mendoza</td><td>109238475</td><td>Dr. Roberto Gomez</td>
+                        <td><span class="badge badge-success">AUTORIZADO</span></td>
+                        <td>Ana Mendoza · Hermana · 3109887766</td>
+                    </tr>
+                    <tr>
+                        <td>Laura Torres</td><td>88374612</td><td>Dra. Beatriz Silva</td>
+                        <td><span class="badge badge-danger">PENDIENTE</span></td>
+                        <td>Sin acompanante</td>
+                    </tr>
+                    <tr>
+                        <td>Pedro Castillo</td><td>73219845</td><td>Dr. Ramirez</td>
+                        <td><span class="badge badge-success">AUTORIZADO</span></td>
+                        <td>Rosa Castillo · Esposa · 3205541234</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- ACOMPANANTES -->
+<section id="acompanantes" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Informacion de Acompanantes</h1>
+        <p>Datos de contacto de los acompanantes autorizados</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Buscar acompanante</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Cedula del paciente o acompanante</label>
+                <input type="text" placeholder="Numero de documento...">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <button class="btn btn-primary" style="margin-top:22px;">Buscar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Detalle · Carlos Mendoza</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Paciente</label><div class="readonly-field">Carlos Mendoza</div></div>
+            <div class="form-group"><label>Cedula paciente</label><div class="readonly-field">109238475</div></div>
+            <div class="form-group"><label>Nombre acompanante</label><div class="readonly-field">Ana Mendoza</div></div>
+            <div class="form-group"><label>Cedula acompanante</label><div class="readonly-field">1023456789</div></div>
+            <div class="form-group"><label>Parentesco</label><div class="readonly-field">Hermana</div></div>
+            <div class="form-group"><label>Telefono</label><div class="readonly-field">3109887766</div></div>
+            <div class="form-group"><label>Ciudad / Pais</label><div class="readonly-field">Bogota, Colombia</div></div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(id, el) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    return false;
+}
+</script>
+{% endblock %}
