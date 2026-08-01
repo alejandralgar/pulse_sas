@@ -58,6 +58,9 @@
                         aria-label="Mostrar contraseña"></button>
             </div>
             {% for error in form.password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            <div class="help-text" style="text-align:right;">
+                <a href="{% url 'password_reset' %}">¿No recuerdas la contraseña? Recupérala</a>
+            </div>
         </div>
 
         <button type="submit" class="btn-primary">Entrar</button>

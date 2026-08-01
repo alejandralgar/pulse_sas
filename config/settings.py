@@ -126,6 +126,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'pulse_sas' / 'internal' / 'static']
 
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@pulsesas.local')
+
 AUTHENTICATION_BACKENDS = [
     'pulse_sas.internal.pulse_sas.accounts.backends.UsernameEmailCedulaBackend',
     'django.contrib.auth.backends.ModelBackend',
