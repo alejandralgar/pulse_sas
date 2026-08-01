@@ -5,3 +5,6 @@ db.sqlite3
 .env
 server.log
 context/
+.claude
+
+SOLUCION_RAMA_PACIENTE_LORENA.md
