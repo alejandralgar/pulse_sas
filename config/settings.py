@@ -126,6 +126,11 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'pulse_sas' / 'internal' / 'static']
 
+AUTHENTICATION_BACKENDS = [
+    'pulse_sas.internal.pulse_sas.accounts.backends.UsernameEmailCedulaBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
