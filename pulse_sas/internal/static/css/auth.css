@@ -230,3 +230,31 @@ body.auth-body {
         font-size: 1.3rem;
     }
 }
+
+/* Select dentro de input-wrap */
+.input-wrap select {
+    width: 100%;
+    padding: 12px 14px 12px 42px;
+    border: 1.5px solid var(--color-border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: #f8fafc;
+    color: var(--color-text);
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.input-wrap select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    background: #ffffff;
+}
+
+/* Select sin icono izquierdo */
+.input-wrap select:not([style*="padding-left:42px"]) {
+    padding-left: 14px;
+}

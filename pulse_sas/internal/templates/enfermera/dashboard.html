@@ -1,0 +1,128 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Enfermera · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Pacientes</div>
+<nav>
+    <a href="#" class="active" onclick="return showSection('agenda', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Agenda del Dia
+    </a>
+    <a href="#" onclick="return showSection('historia', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Historia Clinica
+    </a>
+    <a href="#" onclick="return showSection('salidas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Autorizaciones de Salida
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<!-- AGENDA -->
+<section id="agenda" class="section-content">
+    <div class="page-header">
+        <h1>Agenda del Dia</h1>
+        <p>Pacientes asignados y sus medicos tratantes</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Pacientes de hoy</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Hora</th><th>Paciente</th><th>Cedula</th><th>Medico tratante</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>08:00 AM</td><td>Maria Rodriguez</td><td>52411223</td>
+                        <td>Dr. Gomez</td><td><span class="badge badge-success">Atendido</span></td>
+                    </tr>
+                    <tr>
+                        <td>09:30 AM</td><td>Carlos Lopez</td><td>80234567</td>
+                        <td>Dra. Silva</td><td><span class="badge badge-warning">En espera</span></td>
+                    </tr>
+                    <tr>
+                        <td>11:00 AM</td><td>Andrea Mora</td><td>1021345678</td>
+                        <td>Dr. Gomez</td><td><span class="badge badge-info">Pendiente</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<!-- HISTORIA CLINICA -->
+<section id="historia" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Historia Clinica</h1>
+        <p>Consulta el historial de un paciente</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Buscar paciente</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Cedula o nombre</label>
+                <input type="text" placeholder="Buscar paciente...">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <button class="btn btn-primary" style="margin-top:22px;">Buscar</button>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">Historial · Maria Rodriguez</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Nombre</label><div class="readonly-field">Maria Rodriguez</div></div>
+            <div class="form-group"><label>Cedula</label><div class="readonly-field">52411223</div></div>
+            <div class="form-group"><label>Tipo de sangre</label><div class="readonly-field">O+</div></div>
+            <div class="form-group"><label>Medico tratante</label><div class="readonly-field">Dr. Roberto Gomez</div></div>
+            <div class="form-group"><label>Diagnostico</label><div class="readonly-field">Hipertension leve</div></div>
+            <div class="form-group"><label>Tratamiento</label><div class="readonly-field">Paracetamol 500mg cada 8h</div></div>
+        </div>
+    </div>
+</section>
+
+<!-- AUTORIZACIONES DE SALIDA -->
+<section id="salidas" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Autorizaciones de Salida</h1>
+        <p>Pacientes con autorizacion de salida emitida por el medico</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Estado de autorizaciones</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Paciente</th><th>Cedula</th><th>Medico</th><th>Autorizacion</th><th>Acompanante</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Carlos Mendoza</td><td>109238475</td><td>Dr. Gomez</td>
+                        <td><span class="badge badge-success">Autorizado</span></td>
+                        <td>Ana Mendoza · Hermana · 3109887766</td>
+                    </tr>
+                    <tr>
+                        <td>Laura Torres</td><td>88374612</td><td>Dra. Silva</td>
+                        <td><span class="badge badge-danger">Pendiente</span></td>
+                        <td>Sin acompanante</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(id, el) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    return false;
+}
+</script>
+{% endblock %}

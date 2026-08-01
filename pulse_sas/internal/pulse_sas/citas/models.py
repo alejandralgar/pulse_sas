@@ -10,6 +10,13 @@ class Cita(models.Model):
         CANCELADA = 'cancelada', 'Cancelada'
         REPROGRAMADA = 'reprogramada', 'Reprogramada'
 
+    class TipoCita(models.TextChoices):
+        CONSULTA_GENERAL = 'consulta_general', 'Consulta general'
+        CONTROL = 'control', 'Control'
+        URGENCIA = 'urgencia', 'Urgencia'
+        ESPECIALISTA = 'especialista', 'Especialista'
+        LABORATORIO = 'laboratorio', 'Laboratorio / Examen'
+
     persona = models.ForeignKey(
         Persona, on_delete=models.CASCADE, related_name='citas_como_paciente'
     )
@@ -19,6 +26,7 @@ class Cita(models.Model):
     )
     fecha_hora = models.DateTimeField()
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
+    tipo_cita = models.CharField('tipo de cita', max_length=50, choices=TipoCita.choices, blank=True)
     motivo = models.CharField(max_length=200, help_text='Consulta general, control, examen, etc.')
     observaciones = models.TextField(blank=True)
 

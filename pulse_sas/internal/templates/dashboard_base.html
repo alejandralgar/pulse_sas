@@ -1,0 +1,57 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Pulse SAS{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="dashboard-body">
+
+<!-- TOPBAR -->
+<header class="topbar">
+    <a href="{% url 'dashboard' %}" class="topbar-brand">
+        <img src="{% static 'icono/logo.svg' %}" alt="Pulse SAS">
+        Pulse SAS
+    </a>
+    <div class="topbar-right">
+        <div class="topbar-user">
+            <div class="topbar-avatar">{{ user.username|slice:":2"|upper }}</div>
+            <span>{{ user.get_full_name|default:user.username }}</span>
+        </div>
+        <form method="post" action="{% url 'logout' %}" style="margin:0;">
+            {% csrf_token %}
+            <button type="submit" class="btn-logout">Salir</button>
+        </form>
+    </div>
+</header>
+
+<div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        {% block sidebar %}{% endblock %}
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content">
+        {% block main %}{% endblock %}
+    </main>
+</div>
+
+{% block extra_js %}{% endblock %}
+<script>
+// Tabs simple
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const group = btn.closest('[data-tabs]');
+        group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        group.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+</script>
+</body>
+</html>

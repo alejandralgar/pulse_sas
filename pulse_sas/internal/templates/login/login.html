@@ -18,6 +18,22 @@
 
     <form method="post" novalidate>
         {% csrf_token %}
+
+        <!-- Rol -->
+        <div class="form-group">
+            <label for="id_rol">Rol</label>
+            <div class="input-wrap">
+                <span class="input-icon" style="background-image:url('{% static "icono/user.svg" %}')"></span>
+                <select name="rol" id="id_rol" style="padding-left:42px;">
+                    {% for value, label in form.rol.field.choices %}
+                    <option value="{{ value }}" {% if form.rol.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% for error in form.rol.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+        </div>
+
+        <!-- Usuario -->
         <div class="form-group">
             <label for="id_username">Usuario</label>
             <div class="input-wrap">
@@ -28,6 +44,7 @@
             {% for error in form.username.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
         </div>
 
+        <!-- Contraseña -->
         <div class="form-group">
             <label for="id_password">Contraseña</label>
             <div class="input-wrap">
