@@ -1,0 +1,123 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Administrativo · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Principal</div>
+<nav>
+    <a href="#" class="active" onclick="return showSection('resumen', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Resumen
+    </a>
+    <a href="#" onclick="return showSection('empleados', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        Registrar Empleados
+    </a>
+    <a href="#" onclick="return showSection('citas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Calendario
+    </a>
+    <a href="#" onclick="return showSection('convenios', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        Empresas / Convenios
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<section id="resumen" class="section-content">
+    <div class="page-header">
+        <h1>Panel Administrativo</h1>
+        <p>Gerencia · Secretaría · Recepción</p>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card blue"><span class="stat-label">Médicos activos</span><span class="stat-value">8</span></div>
+        <div class="stat-card green"><span class="stat-label">Enfermeras</span><span class="stat-value">12</span></div>
+        <div class="stat-card orange"><span class="stat-label">Citas hoy</span><span class="stat-value">20</span></div>
+        <div class="stat-card purple"><span class="stat-label">Personal total</span><span class="stat-value">34</span></div>
+    </div>
+    <div class="card">
+        <div class="card-title">Personal registrado</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Nombre</th><th>Cédula</th><th>Rol</th><th>Correo</th><th>Estado</th></tr></thead>
+                <tbody>
+                    <tr><td>Dr. Roberto Gómez</td><td>80123456</td><td><span class="badge badge-info">Médico</span></td><td>r.gomez@pulse.co</td><td><span class="badge badge-success">Activo</span></td></tr>
+                    <tr><td>Luisa Fernández</td><td>45678912</td><td><span class="badge badge-warning">Enfermera</span></td><td>l.fernandez@pulse.co</td><td><span class="badge badge-success">Activo</span></td></tr>
+                    <tr><td>Jorge Ríos</td><td>73456123</td><td><span class="badge badge-gray">Recepcionista</span></td><td>j.rios@pulse.co</td><td><span class="badge badge-success">Activo</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section id="empleados" class="section-content" style="display:none;">
+    <div class="page-header"><h1>Registrar Empleados</h1><p>Médicos, enfermeras, gerencia y más</p></div>
+    <div class="card">
+        <div class="card-title">Nuevo Empleado</div>
+        <form class="form-grid">
+            {% csrf_token %}
+            <div class="form-group"><label>Nombre</label><input type="text" placeholder="Nombre completo"></div>
+            <div class="form-group"><label>Apellido</label><input type="text" placeholder="Apellido"></div>
+            <div class="form-group"><label>Cédula</label><input type="text" placeholder="Número de documento"></div>
+            <div class="form-group"><label>Correo</label><input type="email" placeholder="correo@pulse.co"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" placeholder="Número celular"></div>
+            <div class="form-group">
+                <label>Rol / Cargo</label>
+                <select>
+                    <option value="">Seleccionar...</option>
+                    <option>Médico</option><option>Enfermera</option><option>Secretaria</option>
+                    <option>Recepcionista</option><option>Guardia de seguridad</option><option>Programador</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Especialidad (si aplica)</label><input type="text" placeholder="Ej: Cardiología"></div>
+            <div class="form-group"><label>Contraseña temporal</label><input type="password" placeholder="Contraseña inicial"></div>
+            <div class="form-full"><button type="submit" class="btn btn-primary">Registrar Empleado</button></div>
+        </form>
+    </div>
+</section>
+
+<section id="citas" class="section-content" style="display:none;">
+    <div class="page-header"><h1>Calendario de Citas</h1></div>
+    {% include "partials/calendario.html" %}
+</section>
+
+<section id="convenios" class="section-content" style="display:none;">
+    <div class="page-header"><h1>Empresas y Convenios</h1></div>
+    <div class="card">
+        <div class="card-title">Registrar Empresa / Convenio</div>
+        <form class="form-grid">
+            {% csrf_token %}
+            <div class="form-group"><label>Nombre de la Empresa</label><input type="text" placeholder="Razón social"></div>
+            <div class="form-group"><label>NIT</label><input type="text" placeholder="900.123.456-7"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" placeholder="Número de contacto"></div>
+            <div class="form-group"><label>Especialidad / Servicio</label><input type="text" placeholder="Ej: Cardiología"></div>
+            <div class="form-full"><button type="submit" class="btn btn-primary">Guardar Convenio</button></div>
+        </form>
+    </div>
+    <div class="card">
+        <div class="card-title">Convenios registrados</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Empresa</th><th>NIT</th><th>Teléfono</th><th>Especialidad</th></tr></thead>
+                <tbody>
+                    <tr><td>Sanitas EPS</td><td>800.123.456-1</td><td>6017001122</td><td>General</td></tr>
+                    <tr><td>Compensar</td><td>860.043.129-2</td><td>6015556677</td><td>Pediatría</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(id, el) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    return false;
+}
+</script>
+{% endblock %}

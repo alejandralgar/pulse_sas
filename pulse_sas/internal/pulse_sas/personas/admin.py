@@ -3,6 +3,7 @@ from django.contrib import admin
 from .models import (
     Antecedente,
     Ciudad,
+    ContactoEmergencia,
     DatosAdministrativos,
     Diagnostico,
     ExamenComplementario,
@@ -39,3 +40,4 @@ admin.site.register(ExamenComplementario)
 admin.site.register(Diagnostico)
 admin.site.register(PlanManejo)
 admin.site.register(DatosAdministrativos)
+admin.site.register(ContactoEmergencia)

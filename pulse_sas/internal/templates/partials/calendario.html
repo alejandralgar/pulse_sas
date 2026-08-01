@@ -1,0 +1,82 @@
+<div class="card">
+    <div class="calendar-header">
+        <button class="btn btn-outline btn-sm">&lsaquo; Anterior</button>
+        <h3 id="cal-month-label">Julio 2026</h3>
+        <button class="btn btn-outline btn-sm">Siguiente &rsaquo;</button>
+    </div>
+
+    <!-- Filtros -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;">
+            <input type="checkbox" checked> <span class="badge badge-info">Pacientes</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;">
+            <input type="checkbox" checked> <span class="badge badge-success">Médicos</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.85rem;cursor:pointer;">
+            <input type="checkbox" checked> <span class="badge badge-warning">Enfermeras</span>
+        </label>
+    </div>
+
+    <div class="calendar-grid">
+        <div class="cal-day-name">Lun</div>
+        <div class="cal-day-name">Mar</div>
+        <div class="cal-day-name">Mié</div>
+        <div class="cal-day-name">Jue</div>
+        <div class="cal-day-name">Vie</div>
+        <div class="cal-day-name">Sáb</div>
+        <div class="cal-day-name">Dom</div>
+
+        <!-- Semana 1 -->
+        <div class="cal-day other-month"><span class="day-num">30</span></div>
+        <div class="cal-day"><span class="day-num">1</span></div>
+        <div class="cal-day has-event"><span class="day-num">2</span><div class="cal-dot blue"></div></div>
+        <div class="cal-day"><span class="day-num">3</span></div>
+        <div class="cal-day has-event"><span class="day-num">4</span><div class="cal-dot green"></div></div>
+        <div class="cal-day"><span class="day-num">5</span></div>
+        <div class="cal-day"><span class="day-num">6</span></div>
+
+        <!-- Semana 2 -->
+        <div class="cal-day has-event"><span class="day-num">7</span><div class="cal-dot blue"></div><div class="cal-dot orange"></div></div>
+        <div class="cal-day"><span class="day-num">8</span></div>
+        <div class="cal-day has-event"><span class="day-num">9</span><div class="cal-dot green"></div></div>
+        <div class="cal-day"><span class="day-num">10</span></div>
+        <div class="cal-day has-event"><span class="day-num">11</span><div class="cal-dot blue"></div></div>
+        <div class="cal-day"><span class="day-num">12</span></div>
+        <div class="cal-day"><span class="day-num">13</span></div>
+
+        <!-- Semana 3 -->
+        <div class="cal-day"><span class="day-num">14</span></div>
+        <div class="cal-day has-event"><span class="day-num">15</span><div class="cal-dot orange"></div></div>
+        <div class="cal-day"><span class="day-num">16</span></div>
+        <div class="cal-day has-event"><span class="day-num">17</span><div class="cal-dot blue"></div><div class="cal-dot green"></div></div>
+        <div class="cal-day"><span class="day-num">18</span></div>
+        <div class="cal-day"><span class="day-num">19</span></div>
+        <div class="cal-day"><span class="day-num">20</span></div>
+
+        <!-- Semana 4 -->
+        <div class="cal-day has-event"><span class="day-num">21</span><div class="cal-dot blue"></div></div>
+        <div class="cal-day"><span class="day-num">22</span></div>
+        <div class="cal-day"><span class="day-num">23</span></div>
+        <div class="cal-day"><span class="day-num">24</span></div>
+        <div class="cal-day has-event"><span class="day-num">25</span><div class="cal-dot green"></div></div>
+        <div class="cal-day"><span class="day-num">26</span></div>
+        <div class="cal-day"><span class="day-num">27</span></div>
+
+        <!-- Semana 5 -->
+        <div class="cal-day today"><span class="day-num">28</span></div>
+        <div class="cal-day has-event"><span class="day-num">29</span><div class="cal-dot orange"></div></div>
+        <div class="cal-day"><span class="day-num">30</span></div>
+        <div class="cal-day"><span class="day-num">31</span></div>
+        <div class="cal-day other-month"><span class="day-num">1</span></div>
+        <div class="cal-day other-month"><span class="day-num">2</span></div>
+        <div class="cal-day other-month"><span class="day-num">3</span></div>
+    </div>
+
+    <!-- Leyenda -->
+    <div style="display:flex;gap:16px;margin-top:16px;font-size:0.8rem;color:var(--color-muted);">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#2563eb;margin-right:4px;"></span>Paciente</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#16a34a;margin-right:4px;"></span>Médico</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d97706;margin-right:4px;"></span>Enfermera</span>
+    </div>
+</div>

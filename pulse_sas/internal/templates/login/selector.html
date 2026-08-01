@@ -1,0 +1,117 @@
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Seleccionar Vista · Pulse SAS</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <style>
+        .selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 24px;
+        }
+        .role-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 22px 14px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+            background: #fff;
+        }
+        .role-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+            transform: translateY(-2px);
+        }
+        .role-icon {
+            font-size: 2rem;
+            line-height: 1;
+        }
+        .role-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 400;
+        }
+        .selector-card {
+            max-width: 680px;
+        }
+        .logout-row {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        .logout-row a {
+            color: #2563eb;
+            font-weight: 600;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body class="auth-body">
+<div class="auth-card selector-card">
+    <div class="auth-header">
+        <img src="{% static 'icono/logo.svg' %}" alt="Pulse SAS" class="auth-logo">
+        <h1>Hola, {{ user.username }}</h1>
+        <p>Selecciona la vista que deseas explorar</p>
+    </div>
+
+    <div class="selector-grid">
+        <a href="{% url 'dashboard_admin' %}" class="role-card">
+            <span class="role-icon">🛡️</span>
+            Admin
+            <span class="role-desc">Control total del sistema</span>
+        </a>
+        <a href="{% url 'dashboard_administrativo' %}" class="role-card">
+            <span class="role-icon">🏢</span>
+            Administrativo
+            <span class="role-desc">Gerencia · Secretaría</span>
+        </a>
+        <a href="{% url 'dashboard_medico' %}" class="role-card">
+            <span class="role-icon">🩺</span>
+            Médico
+            <span class="role-desc">Atención y consultas</span>
+        </a>
+        <a href="{% url 'dashboard_enfermera' %}" class="role-card">
+            <span class="role-icon">💊</span>
+            Enfermera
+            <span class="role-desc">Historia y salidas</span>
+        </a>
+        <a href="{% url 'dashboard_guardia' %}" class="role-card">
+            <span class="role-icon">🔒</span>
+            Guardia
+            <span class="role-desc">Control de acceso</span>
+        </a>
+        <a href="{% url 'dashboard_cliente' %}" class="role-card">
+            <span class="role-icon">👤</span>
+            Paciente
+            <span class="role-desc">Portal del paciente</span>
+        </a>
+        <a href="{% url 'dashboard_empresa' %}" class="role-card">
+            <span class="role-icon">🏥</span>
+            Empresa / EPS
+            <span class="role-desc">Convenios</span>
+        </a>
+    </div>
+
+    <div class="logout-row">
+        <form method="post" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="background:none;border:none;cursor:pointer;color:#2563eb;font-weight:600;font-size:0.85rem;">
+                Cerrar sesión
+            </button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{% static 'css/auth.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="auth-body">
+<body class="{% block body_class %}auth-body{% endblock %}">
     {% block content %}{% endblock %}
     <script src="{% static 'js/auth.js' %}"></script>
     {% block extra_js %}{% endblock %}

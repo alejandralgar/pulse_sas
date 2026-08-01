@@ -100,6 +100,11 @@ class Persona(models.Model):
     telefono_personal = models.CharField(max_length=20, blank=True)
     telefono_acompanante = models.CharField('teléfono acompañante', max_length=20, blank=True)
     correo = models.EmailField()
+    eps_ips = models.CharField('EPS / IPS', max_length=150, blank=True)
+    ciudad_residencia = models.ForeignKey(
+        'Ciudad', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='residentes', verbose_name='ciudad de residencia',
+    )
     roles = models.ManyToManyField(Rol, through='RolPersona', related_name='personas')
     tipos_sangre = models.ManyToManyField(TipoSangre, through='TipoSangrePersona', related_name='personas')
 
@@ -343,3 +348,29 @@ class DatosAdministrativos(models.Model):
 
     def __str__(self):
         return f'Datos administrativos - {self.historia_clinica}'
+
+
+class ContactoEmergencia(models.Model):
+    paciente = models.ForeignKey(
+        Persona, on_delete=models.CASCADE, related_name='contactos_emergencia',
+        verbose_name='paciente',
+    )
+    nombre_completo = models.CharField('nombre completo', max_length=200)
+    cedula = models.CharField('cédula / identificación', max_length=20, blank=True)
+    correo = models.EmailField('correo electrónico', blank=True)
+    telefono = models.CharField('teléfono', max_length=20)
+    parentesco = models.CharField(max_length=80)
+    ciudad_residencia = models.ForeignKey(
+        Ciudad, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='contactos_emergencia', verbose_name='ciudad de residencia',
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'contacto de emergencia'
+        verbose_name_plural = 'contactos de emergencia'
+        ordering = ['-creado_en']
+
+    def __str__(self):
+        return f'{self.nombre_completo} ({self.parentesco}) → {self.paciente}'

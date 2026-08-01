@@ -1,0 +1,173 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Médico · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Atención</div>
+<nav>
+    <a href="#" class="active" onclick="return showSection('agenda', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Agenda del Día
+    </a>
+    <a href="#" onclick="return showSection('atencion', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Atender Paciente
+    </a>
+    <a href="#" onclick="return showSection('historia', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Historia Clínica
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<section id="agenda" class="section-content">
+    <div class="page-header">
+        <h1>Agenda del Día</h1>
+        <p>Lista de pacientes programados para hoy</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Pacientes de hoy</div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th><th>Acción</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>08:00 AM</td><td>María Rodríguez</td><td>52411223</td>
+                        <td>Consulta general</td><td><span class="badge badge-success">Atendido</span></td>
+                        <td><button class="btn btn-outline btn-sm" onclick="return showSection('atencion', null)">Ver</button></td>
+                    </tr>
+                    <tr>
+                        <td>09:30 AM</td><td>Carlos López</td><td>80234567</td>
+                        <td>Control</td><td><span class="badge badge-warning">En espera</span></td>
+                        <td><button class="btn btn-primary btn-sm" onclick="return showSection('atencion', null)">Atender</button></td>
+                    </tr>
+                    <tr>
+                        <td>11:00 AM</td><td>Andrea Mora</td><td>1021345678</td>
+                        <td>Urgencia</td><td><span class="badge badge-info">Pendiente</span></td>
+                        <td><button class="btn btn-outline btn-sm">Ver</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% include "partials/calendario.html" %}
+</section>
+
+<section id="atencion" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Atención Médica</h1>
+        <p>Registro de consulta · María Rodríguez (C.I: 52411223)</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Datos del paciente</div>
+        <div class="form-grid">
+            <div class="form-group"><label>Nombre</label><div class="readonly-field">María Rodríguez</div></div>
+            <div class="form-group"><label>Cédula</label><div class="readonly-field">52411223</div></div>
+            <div class="form-group"><label>Tipo de sangre</label><div class="readonly-field">O+</div></div>
+            <div class="form-group"><label>EPS / IPS</label><div class="readonly-field">Sanitas EPS</div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Registro de Consulta</div>
+        <form class="form-grid">
+            {% csrf_token %}
+            <div class="form-group form-full">
+                <label>Motivo de consulta</label>
+                <textarea placeholder="Razón por la que acude el paciente..."></textarea>
+            </div>
+            <div class="form-group form-full">
+                <label>Diagnóstico / Impresión clínica</label>
+                <textarea placeholder="Hipótesis y diagnóstico confirmado..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Presión arterial</label>
+                <input type="text" placeholder="120/80 mmHg">
+            </div>
+            <div class="form-group">
+                <label>Frecuencia cardíaca</label>
+                <input type="number" placeholder="lpm">
+            </div>
+            <div class="form-group">
+                <label>Temperatura (°C)</label>
+                <input type="number" step="0.1" placeholder="36.5">
+            </div>
+            <div class="form-group">
+                <label>Frecuencia respiratoria</label>
+                <input type="number" placeholder="rpm">
+            </div>
+            <div class="form-group form-full">
+                <label>Tratamiento indicado</label>
+                <textarea placeholder="Describe el plan de manejo y tratamiento..."></textarea>
+            </div>
+            <div class="form-group form-full">
+                <label>Formulación de medicamentos</label>
+                <textarea placeholder="Ej: Paracetamol 500mg cada 8h por 5 días..."></textarea>
+            </div>
+            <div class="form-group form-full">
+                <label>Recomendaciones</label>
+                <textarea placeholder="Indicaciones al paciente..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Próxima cita</label>
+                <input type="date">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:center;gap:10px;">
+                <input type="checkbox" id="auth_salida" style="width:18px;height:18px;">
+                <label for="auth_salida" style="font-size:0.9rem;font-weight:600;color:var(--color-success);">
+                    Autorizar salida de la clínica
+                </label>
+            </div>
+            <div class="form-full">
+                <button type="submit" class="btn btn-primary">Guardar Registro</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section id="historia" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Historia Clínica</h1>
+        <p>Busca y consulta el historial de cualquier paciente</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Buscar Paciente</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Cédula o nombre del paciente</label>
+                <input type="text" placeholder="Buscar...">
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+                <button class="btn btn-primary" style="margin-top:22px;">Buscar</button>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-title">Historial · María Rodríguez</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Fecha</th><th>Diagnóstico</th><th>Médico</th><th>Autorización salida</th></tr></thead>
+                <tbody>
+                    <tr><td>2026-07-15</td><td>Hipertensión leve</td><td>Dr. Gómez</td><td><span class="badge badge-success">Autorizado</span></td></tr>
+                    <tr><td>2026-06-03</td><td>Control general</td><td>Dr. Gómez</td><td><span class="badge badge-success">Autorizado</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(id, el) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    return false;
+}
+</script>
+{% endblock %}
