@@ -45,6 +45,10 @@ class RegistroForm(UserCreationForm):
 class LoginConRolForm(AuthenticationForm):
     rol = forms.ChoiceField(choices=ROL_CHOICES, label='Rol')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = 'Usuario, correo o cédula'
+
     def clean_rol(self):
         rol = self.cleaned_data.get('rol')
         if not rol:

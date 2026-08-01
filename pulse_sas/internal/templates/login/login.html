@@ -33,13 +33,13 @@
             {% for error in form.rol.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
         </div>
 
-        <!-- Usuario -->
+        <!-- Usuario / correo / cédula -->
         <div class="form-group">
-            <label for="id_username">Usuario</label>
+            <label for="id_username">Usuario, correo o cédula</label>
             <div class="input-wrap">
                 <span class="input-icon" style="background-image:url('{% static "icono/user.svg" %}')"></span>
                 <input type="text" name="username" id="id_username" autofocus required
-                       value="{{ form.username.value|default:'' }}" placeholder="Tu usuario">
+                       value="{{ form.username.value|default:'' }}" placeholder="Tu usuario, correo o cédula">
             </div>
             {% for error in form.username.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
         </div>
@@ -58,6 +58,9 @@
                         aria-label="Mostrar contraseña"></button>
             </div>
             {% for error in form.password.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            <div class="help-text" style="text-align:right;">
+                <a href="{% url 'password_reset' %}">¿No recuerdas la contraseña? Recupérala</a>
+            </div>
         </div>
 
         <button type="submit" class="btn-primary">Entrar</button>
