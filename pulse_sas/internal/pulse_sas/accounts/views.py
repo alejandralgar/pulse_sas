@@ -64,7 +64,10 @@ def registro(request):
 def _crear_persona_con_rol(user, datos):
     """Crea el perfil Persona y asigna el rol al usuario recién registrado."""
     try:
-        from pulse_sas.internal.pulse_sas.personas.models import Persona, Rol, RolPersona
+        from pulse_sas.internal.pulse_sas.personas.models import Persona, Rol, RolPersona, TipoSangre, TipoSangrePersona
+
+        categoria = datos.get('rol', '')
+        eps_val = datos.get('eps_ips', '') if categoria == 'cliente_paciente' else ''
 
         persona, _ = Persona.objects.get_or_create(
             usuario=user,
@@ -74,10 +77,20 @@ def _crear_persona_con_rol(user, datos):
                 'cedula':   datos.get('cedula', ''),
                 'correo':   datos.get('email', user.email),
                 'edad':     0,
+                'eps_ips':  eps_val,
             }
         )
 
-        categoria = datos.get('rol', '')
+        if eps_val and persona.eps_ips != eps_val:
+            persona.eps_ips = eps_val
+            persona.save()
+
+        # Asociar tipo de sangre para paciente
+        tipo_sangre_val = datos.get('tipo_sangre')
+        if tipo_sangre_val and categoria == 'cliente_paciente':
+            ts_obj, _ = TipoSangre.objects.get_or_create(nombre=tipo_sangre_val)
+            TipoSangrePersona.objects.get_or_create(persona=persona, tipo_sangre=ts_obj)
+
         if categoria:
             # Buscar o crear un Rol con esa categoría
             rol_obj, _ = Rol.objects.get_or_create(

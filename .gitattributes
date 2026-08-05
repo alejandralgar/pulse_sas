@@ -1,0 +1,20 @@
+# Mantener consistencia en código fuente
+*.py     text eol=lf
+*.html   text eol=lf
+*.css    text eol=lf
+*.js     text eol=lf
+
+# Archivos de configuración
+*.json   text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+
+# Archivos de Windows (permitir CRLF)
+*.bat    text eol=crlf
+
+# Binarios (no tocar)
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.pdf    binary
