@@ -190,6 +190,13 @@
             <div class="form-group"><label>Presión arterial</label><input type="text" placeholder="120/80 mmHg"></div>
             <div class="form-group"><label>Frecuencia cardíaca</label><input type="number" placeholder="lpm"></div>
             <div class="form-group form-full"><label>Tratamiento indicado</label><textarea placeholder="Plan de manejo..."></textarea></div>
+            <div class="form-group form-full" style="background:#f8fafc;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-top:5px;">
+                <label style="font-weight:600;color:var(--color-text,#1e293b);margin-bottom:8px;display:flex;align-items:center;gap:6px;">📅 Agendar próxima cita de control <span style="font-weight:normal;color:#64748b;font-size:0.85rem;">(Opcional)</span></label>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
+                    <div><label style="font-size:0.8rem;color:#475569;display:block;margin-bottom:4px;">Fecha sugerida</label><input type="date" id="fecha-cita-control" style="width:100%;"></div>
+                    <div><label style="font-size:0.8rem;color:#475569;display:block;margin-bottom:4px;">Hora / Observaciones</label><input type="text" id="obs-cita-control" placeholder="Ej: 09:00 AM - Control y exámenes" style="width:100%;"></div>
+                </div>
+            </div>
             <div class="form-group form-full" style="flex-direction:row;align-items:center;gap:20px;margin-top:10px;">
                 <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--color-success, #28a745);font-weight:600;">
                     <input type="radio" name="auth_salida" value="autorizar" checked onclick="toggleMotivoSalida(false)"> Autorizar salida de la clínica
