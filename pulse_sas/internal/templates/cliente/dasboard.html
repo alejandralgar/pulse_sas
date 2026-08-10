@@ -5,7 +5,7 @@
 {% block sidebar %}
 <div class="sidebar-section">Mi cuenta</div>
 <nav>
-    <a href="#" id="nav-perfil" class="{% if seccion_activa == 'perfil' %}active{% endif %}"
+    <a href="#" id="nav-perfil" class="{% if seccion_activa != 'cita' and seccion_activa != 'miscitas' %}active{% endif %}"
        onclick="return showSection('perfil', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -13,30 +13,13 @@
         </svg>
         Mi Perfil
     </a>
-    <a href="#" id="nav-cita" class="{% if seccion_activa == 'cita' %}active{% endif %}"
+    <a href="#" id="nav-cita" class="{% if seccion_activa == 'cita' or seccion_activa == 'miscitas' %}active{% endif %}"
        onclick="return showSection('cita', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-        </svg>
-        Solicitar Cita
-    </a>
-    <a href="#" id="nav-miscitas" class="{% if seccion_activa == 'miscitas' %}active{% endif %}"
-       onclick="return showSection('miscitas', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
         </svg>
-        Mis Citas
-    </a>
-    <a href="#" id="nav-contacto" class="{% if seccion_activa == 'contacto' %}active{% endif %}"
-       onclick="return showSection('contacto', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857
-                     M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857
-                     m0 0a5.002 5.002 0 019.288 0"/>
-        </svg>
-        Persona de Contacto
+        Solicitar Citas
     </a>
 </nav>
 {% endblock %}
@@ -51,252 +34,8 @@
 </div>
 {% endif %}
 
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECCIÓN: MI PERFIL                                             -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<section id="perfil" class="section-content" {% if seccion_activa != 'perfil' %}style="display:none"{% endif %}>
-    <div class="page-header">
-        <h1>Mi Perfil</h1>
-        <p>Consulta y actualiza tu información personal</p>
-    </div>
-
-    <!-- Datos NO editables -->
-    <div class="card">
-        <div class="card-title">Información básica (solo lectura)</div>
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Nombre completo</label>
-                <div class="readonly-field">
-                    <span class="lock-icon">🔒</span>
-                    {% if persona %}{{ persona.nombre }} {{ persona.apellido }}{% else %}—{% endif %}
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Cédula / Documento</label>
-                <div class="readonly-field">
-                    <span class="lock-icon">🔒</span>
-                    {% if persona %}{{ persona.cedula }}{% else %}—{% endif %}
-                </div>
-            </div>
-            <div class="form-group">
-                <label>País de nacimiento</label>
-                <div class="readonly-field">
-                    <span class="lock-icon">🔒</span>
-                    {% if persona and persona.pais_nacimiento %}{{ persona.pais_nacimiento }}{% else %}Colombia{% endif %}
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Tipo de sangre</label>
-                <div class="readonly-field">
-                    <span class="lock-icon">🔒</span>
-                    {% if persona %}
-                        {% with ts=persona.tipos_sangre.first %}
-                            {% if ts %}{{ ts }}{% else %}No registrado{% endif %}
-                        {% endwith %}
-                    {% else %}—{% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Datos EDITABLES -->
-    <div class="card">
-        <div class="card-title">Actualizar información de contacto</div>
-        <form method="post" action="{% url 'cliente_perfil' %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                {% for field in perfil_form %}
-                <div class="form-group {% if forloop.last %}form-full{% endif %}">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                    <span class="form-error">{{ field.errors.0 }}</span>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <div class="form-full">
-                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECCIÓN: SOLICITAR CITA                                        -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<section id="cita" class="section-content" {% if seccion_activa != 'cita' %}style="display:none"{% endif %}>
-    <div class="page-header">
-        <h1>Solicitar Cita</h1>
-        <p>Elige el tipo de cita y el horario disponible</p>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
-
-        <!-- Formulario -->
-        <div class="card">
-            <div class="card-title">Nueva cita</div>
-            <form method="post" action="{% url 'cliente_solicitar_cita' %}" id="form-cita">
-                {% csrf_token %}
-                <div class="form-grid" style="grid-template-columns:1fr;">
-                    {% for field in cita_form %}
-                    <div class="form-group">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                        <span class="form-error">{{ field.errors.0 }}</span>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                    <div>
-                        <button type="submit" class="btn btn-primary" style="width:100%">
-                            Solicitar Cita
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Calendario de disponibilidad -->
-        <div class="card">
-            <div class="card-title">Disponibilidad del mes</div>
-            <div class="calendar-header">
-                <button class="btn btn-outline btn-sm" id="cal-prev">&#8592;</button>
-                <h3 id="cal-title"></h3>
-                <button class="btn btn-outline btn-sm" id="cal-next">&#8594;</button>
-            </div>
-            <div class="calendar-grid" id="cal-nombres"></div>
-            <div class="calendar-grid" id="cal-dias" style="margin-top:4px;"></div>
-            <div style="margin-top:12px;display:flex;gap:14px;font-size:0.78rem;color:var(--color-muted);">
-                <span><span class="cal-dot blue" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>Cita registrada</span>
-                <span style="color:var(--color-primary);font-weight:700;">■</span> Hoy
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECCIÓN: MIS CITAS                                             -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<section id="miscitas" class="section-content" {% if seccion_activa != 'miscitas' %}style="display:none"{% endif %}>
-    <div class="page-header">
-        <h1>Mis Citas</h1>
-        <p>Historial y estado de tus citas médicas</p>
-    </div>
-    <div class="card">
-        <div class="card-title">Mis citas registradas</div>
-        {% if citas %}
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Hora</th>
-                        <th>Tipo</th>
-                        <th>Motivo</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for cita in citas %}
-                    <tr>
-                        <td>{{ cita.fecha_hora|date:"d/m/Y" }}</td>
-                        <td>{{ cita.fecha_hora|time:"h:i A" }}</td>
-                        <td>{{ cita.get_tipo_cita_display|default:"—" }}</td>
-                        <td>{{ cita.motivo }}</td>
-                        <td>
-                            {% if cita.estado == 'confirmada' %}
-                                <span class="badge badge-info">Confirmada</span>
-                            {% elif cita.estado == 'pendiente' %}
-                                <span class="badge badge-warning">Pendiente</span>
-                            {% elif cita.estado == 'cancelada' %}
-                                <span class="badge badge-danger">Cancelada</span>
-                            {% elif cita.estado == 'reprogramada' %}
-                                <span class="badge badge-gray">Reprogramada</span>
-                            {% else %}
-                                <span class="badge badge-gray">{{ cita.estado }}</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p style="color:var(--color-muted);text-align:center;padding:24px 0;">
-            Aún no tienes citas registradas.
-            <a href="#" onclick="return showSection('cita', document.getElementById('nav-cita'))"
-               style="color:var(--color-primary);font-weight:600;">Solicitar una cita</a>
-        </p>
-        {% endif %}
-    </div>
-</section>
-
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- SECCIÓN: PERSONA DE CONTACTO                                   -->
-<!-- ═══════════════════════════════════════════════════════════════ -->
-<section id="contacto" class="section-content" {% if seccion_activa != 'contacto' %}style="display:none"{% endif %}>
-    <div class="page-header">
-        <h1>Persona de Contacto</h1>
-        <p>Agrega o actualiza tu contacto de emergencia</p>
-    </div>
-    <div class="card">
-        <div class="card-title">
-            {% if contacto_emergencia %}Actualizar contacto de emergencia{% else %}Registrar contacto de emergencia{% endif %}
-        </div>
-        <form method="post" action="{% url 'cliente_contacto' %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                {% for field in contacto_form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                    <span class="form-error">{{ field.errors.0 }}</span>
-                    {% endif %}
-                </div>
-                {% endfor %}
-                <div class="form-full">
-                    <button type="submit" class="btn btn-primary">
-                        {% if contacto_emergencia %}Actualizar{% else %}Guardar{% endif %} persona de contacto
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    {% if contacto_emergencia %}
-    <div class="card">
-        <div class="card-title">Contacto actual registrado</div>
-        <div class="form-grid">
-            <div class="form-group">
-                <label>Nombre</label>
-                <div class="readonly-field">{{ contacto_emergencia.nombre_completo }}</div>
-            </div>
-            <div class="form-group">
-                <label>Cédula</label>
-                <div class="readonly-field">{{ contacto_emergencia.cedula|default:"—" }}</div>
-            </div>
-            <div class="form-group">
-                <label>Teléfono</label>
-                <div class="readonly-field">{{ contacto_emergencia.telefono }}</div>
-            </div>
-            <div class="form-group">
-                <label>Parentesco</label>
-                <div class="readonly-field">{{ contacto_emergencia.parentesco }}</div>
-            </div>
-            <div class="form-group">
-                <label>Correo</label>
-                <div class="readonly-field">{{ contacto_emergencia.correo|default:"—" }}</div>
-            </div>
-            <div class="form-group">
-                <label>Ciudad</label>
-                <div class="readonly-field">{{ contacto_emergencia.ciudad_residencia|default:"—" }}</div>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</section>
+{% include "cliente/partials/_perfil.html" %}
+{% include "cliente/partials/_citas.html" %}
 
 {# JSON de citas para el calendario — patrón seguro para JS en templates Django #}
 <script id="citas-data" type="application/json">{{ citas_calendario_json|safe }}</script>
@@ -317,10 +56,9 @@
 .alert-error, .alert-danger { background: #fee2e2; color: #b91c1c; border-left: 4px solid #dc2626; }
 .alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
 .form-error { color: var(--color-error); font-size: 0.78rem; margin-top: 2px; }
-/* Estilo uniforme para inputs de los formularios Django */
+
 #perfil input, #perfil select,
-#cita input, #cita select, #cita textarea,
-#contacto input, #contacto select {
+#cita input, #cita select, #cita textarea {
     width: 100%;
     padding: 10px 12px;
     border: 1.5px solid var(--color-border);
@@ -333,8 +71,7 @@
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 #perfil input:focus, #perfil select:focus,
-#cita input:focus, #cita select:focus, #cita textarea:focus,
-#contacto input:focus, #contacto select:focus {
+#cita input:focus, #cita select:focus, #cita textarea:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
@@ -342,103 +79,187 @@
 }
 .cal-day.selected { background: var(--color-primary-light); border-color: var(--color-primary); }
 .cal-day.has-event { border-color: #2563eb; }
+.cal-day.disabled-day {
+    opacity: 0.35;
+    background: #f1f5f9;
+    cursor: not-allowed;
+    pointer-events: none;
+    color: #94a3b8;
+}
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// ── Sección activa ──────────────────────────────────────────────
 function showSection(id, el) {
     document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
+    const sec = document.getElementById(id);
+    if (sec) sec.style.display = 'block';
     document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
     if (el) el.classList.add('active');
     return false;
 }
 
-// ── Datos de citas para el calendario ──────────────────────────
-const citasData = JSON.parse(document.getElementById('citas-data').textContent);
+function switchSubTab(tabId, el) {
+    const parent = document.getElementById('cita');
+    if (!parent) return;
+    parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById(tabId);
+    if (target) target.classList.add('active');
+    if (el) el.classList.add('active');
+}
 
-// ── Calendario interactivo ──────────────────────────────────────
+const citasData = JSON.parse(document.getElementById('citas-data').textContent || '[]');
+
+async function actualizarHorariosDisponibles(fechaStr) {
+    const selectHora = document.querySelector('#form-cita select[name="hora"]');
+    if (!selectHora || !fechaStr) return;
+
+    try {
+        const resp = await fetch(`/cliente/cita/horarios/?fecha=${fechaStr}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const ocupados = data.ocupados || [];
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hoyStr = `${yyyy}-${mm}-${dd}`;
+        const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        Array.from(selectHora.options).forEach(opt => {
+            if (!opt.value) return;
+            const horaVal = opt.value;
+            const baseText = opt.dataset.rawText || opt.text.replace(/ \((Disponible|No disponible.*)\)/, '');
+            opt.dataset.rawText = baseText;
+
+            const estaOcupado = ocupados.includes(horaVal);
+            const esMismoDia = (fechaStr === hoyStr);
+            const esHoraPasada = esMismoDia && (horaVal <= currentHHMM);
+
+            if (estaOcupado) {
+                opt.disabled = true;
+                opt.text = `${baseText} (No disponible - Ocupada)`;
+            } else if (esHoraPasada) {
+                opt.disabled = true;
+                opt.text = `${baseText} (No disponible - Hora pasada)`;
+            } else {
+                opt.disabled = false;
+                opt.text = `${baseText} (Disponible)`;
+            }
+        });
+
+        if (selectHora.selectedOptions.length && selectHora.selectedOptions[0].disabled) {
+            selectHora.value = "";
+        }
+    } catch (e) {
+        console.error("Error al consultar horarios:", e);
+    }
+}
+
 (function () {
     const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const DIAS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
-    let hoy    = new Date();
-    let anio   = hoy.getFullYear();
-    let mes    = hoy.getMonth();
+    const hoyDate = new Date();
+    hoyDate.setHours(0,0,0,0);
+    const yyyy = hoyDate.getFullYear();
+    const mm = String(hoyDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoyDate.getDate()).padStart(2, '0');
+    const hoyStr = `${yyyy}-${mm}-${dd}`;
 
-    function fechasConCitas() {
-        return new Set(citasData.map(c => c.fecha));
+    const inputFecha = document.querySelector('#form-cita input[name="fecha"]');
+    if (inputFecha) {
+        inputFecha.setAttribute('min', hoyStr);
+        if (inputFecha.value) {
+            actualizarHorariosDisponibles(inputFecha.value);
+        }
+        inputFecha.addEventListener('change', (e) => {
+            const selectedStr = e.target.value;
+            if (selectedStr < hoyStr) {
+                alert('No puedes seleccionar fechas anteriores a la fecha actual.');
+                e.target.value = hoyStr;
+                actualizarHorariosDisponibles(hoyStr);
+            } else {
+                actualizarHorariosDisponibles(selectedStr);
+            }
+        });
     }
+
+    let anio = hoyDate.getFullYear();
+    let mes  = hoyDate.getMonth();
 
     function renderCalendario() {
         const title   = document.getElementById('cal-title');
         const nombres = document.getElementById('cal-nombres');
         const grid    = document.getElementById('cal-dias');
-        if (!title) return;
+        if (!title || !grid) return;
 
         title.textContent = MESES[mes] + ' ' + anio;
+        nombres.innerHTML = DIAS.map(d => `<div class="cal-day-name">${d}</div>`).join('');
 
-        // Nombres días
-        nombres.innerHTML = DIAS.map(d =>
-            `<div class="cal-day-name">${d}</div>`
-        ).join('');
-
-        const conCitas = fechasConCitas();
+        const conCitas = new Set(citasData.map(c => c.fecha));
         const primerDia = new Date(anio, mes, 1).getDay();
         const diasEnMes = new Date(anio, mes + 1, 0).getDate();
         const diasMesAnt = new Date(anio, mes, 0).getDate();
 
         let celdas = '';
 
-        // Días mes anterior
         for (let i = primerDia - 1; i >= 0; i--) {
-            celdas += `<div class="cal-day other-month"><span class="day-num">${diasMesAnt - i}</span></div>`;
+            celdas += `<div class="cal-day other-month disabled-day"><span class="day-num">${diasMesAnt - i}</span></div>`;
         }
 
-        // Días del mes
         for (let d = 1; d <= diasEnMes; d++) {
+            const curDate = new Date(anio, mes, d);
+            curDate.setHours(0,0,0,0);
             const fechaStr = `${anio}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const esHoy    = (d === hoy.getDate() && mes === hoy.getMonth() && anio === hoy.getFullYear());
+
+            const esHoy     = curDate.getTime() === hoyDate.getTime();
+            const esPasado  = curDate.getTime() < hoyDate.getTime();
             const tieneCita = conCitas.has(fechaStr);
+
             let cls = 'cal-day';
             if (esHoy) cls += ' today';
+            if (esPasado) cls += ' disabled-day';
             if (tieneCita) cls += ' has-event';
 
             const dot = tieneCita ? `<span class="cal-dot blue"></span>` : '';
-            celdas += `<div class="${cls}" data-fecha="${fechaStr}" onclick="seleccionarFecha('${fechaStr}')">
+            const clickAttr = esPasado ? '' : `onclick="seleccionarFecha('${fechaStr}')"`;
+
+            celdas += `<div class="${cls}" data-fecha="${fechaStr}" ${clickAttr}>
                 <span class="day-num">${d}</span>${dot}
             </div>`;
         }
 
-        // Rellenar fila final
         const total = primerDia + diasEnMes;
         const restantes = total % 7 === 0 ? 0 : 7 - (total % 7);
         for (let i = 1; i <= restantes; i++) {
-            celdas += `<div class="cal-day other-month"><span class="day-num">${i}</span></div>`;
+            celdas += `<div class="cal-day other-month disabled-day"><span class="day-num">${i}</span></div>`;
         }
 
         grid.innerHTML = celdas;
     }
 
     window.seleccionarFecha = function(fecha) {
-        // Poner la fecha en el input del formulario de cita
-        const inputFecha = document.querySelector('#form-cita input[name="fecha"]');
-        if (inputFecha) inputFecha.value = fecha;
-        // Marcar visualmente
+        if (fecha < hoyStr) return;
+        if (inputFecha) {
+            inputFecha.value = fecha;
+            actualizarHorariosDisponibles(fecha);
+        }
         document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
         const el = document.querySelector(`.cal-day[data-fecha="${fecha}"]`);
         if (el) el.classList.add('selected');
-        // Ir a la sección de cita
         showSection('cita', document.getElementById('nav-cita'));
+        switchSubTab('subtab-solicitar', document.querySelector('.tab-btn[data-tab="subtab-solicitar"]'));
     };
 
-    document.getElementById('cal-prev').addEventListener('click', () => {
+    document.getElementById('cal-prev')?.addEventListener('click', () => {
         mes--; if (mes < 0) { mes = 11; anio--; } renderCalendario();
     });
-    document.getElementById('cal-next').addEventListener('click', () => {
+    document.getElementById('cal-next')?.addEventListener('click', () => {
         mes++; if (mes > 11) { mes = 0; anio++; } renderCalendario();
     });
 

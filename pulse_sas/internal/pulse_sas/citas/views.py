@@ -11,6 +11,9 @@ from .forms import SolicitarCitaForm
 from .models import Cita
 
 
+from django.utils import timezone
+
+
 @login_required
 def solicitar_cita(request):
     try:
@@ -23,9 +26,37 @@ def solicitar_cita(request):
         form = SolicitarCitaForm(request.POST)
         if form.is_valid():
             d = form.cleaned_data
-            fecha_hora = datetime.strptime(
-                f"{d['fecha']} {d['hora']}", '%Y-%m-%d %H:%M'
+            fecha_str = d['fecha'].strftime('%Y-%m-%d') if hasattr(d['fecha'], 'strftime') else str(d['fecha'])
+            fecha_hora_naive = datetime.strptime(
+                f"{fecha_str} {d['hora']}", '%Y-%m-%d %H:%M'
             )
+
+            if timezone.is_aware(timezone.now()):
+                fecha_hora = timezone.make_aware(fecha_hora_naive, timezone.get_current_timezone())
+                ahora = timezone.localtime(timezone.now())
+            else:
+                fecha_hora = fecha_hora_naive
+                ahora = datetime.now()
+
+            # 1. Validar que la fecha/hora no sea del pasado ni una hora transcurrida del mismo día
+            if fecha_hora < ahora:
+                messages.error(request, 'No puedes agendar una cita para una fecha u hora pasadas.')
+                return redirect('dashboard_cliente')
+
+            # 2. Validar si otro paciente ya ocupó ese horario
+            ocupada = Cita.objects.filter(
+                fecha_hora=fecha_hora,
+                estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA]
+            ).exists()
+
+            if ocupada:
+                messages.error(
+                    request,
+                    'El horario seleccionado ya ha sido ocupado por otro paciente. '
+                    'Por favor selecciona otro horario.'
+                )
+                return redirect('dashboard_cliente')
+
             Cita.objects.create(
                 persona=persona,
                 fecha_hora=fecha_hora,
@@ -63,5 +94,12 @@ def horarios_disponibles(request):
         estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
     ).values_list('fecha_hora', flat=True)
 
-    ocupados = [c.strftime('%H:%M') for c in citas_del_dia]
+    ocupados = []
+    for c in citas_del_dia:
+        if timezone.is_aware(c):
+            c_local = timezone.localtime(c)
+        else:
+            c_local = c
+        ocupados.append(c_local.strftime('%H:%M'))
+
     return JsonResponse({'ocupados': ocupados})

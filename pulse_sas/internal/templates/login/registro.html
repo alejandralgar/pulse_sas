@@ -32,6 +32,31 @@
             {% for error in form.rol.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
         </div>
 
+        <!-- Campos de Paciente (Tipo de Sangre y EPS/IPS) -->
+        <div id="campos-paciente" style="display:{% if form.rol.value == 'cliente_paciente' %}block{% else %}none{% endif %}; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:16px;">
+            <div style="font-weight:600; font-size:0.85rem; color:#166534; margin-bottom:10px;">Información Paciente</div>
+            <div class="form-group" style="margin-bottom:10px;">
+                <label for="id_tipo_sangre">Tipo de sangre</label>
+                <div class="input-wrap">
+                    <select name="tipo_sangre" id="id_tipo_sangre" style="padding-left:14px;">
+                        {% for value, label in form.tipo_sangre.field.choices %}
+                        <option value="{{ value }}" {% if form.tipo_sangre.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% for error in form.tipo_sangre.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label for="id_eps_ips">EPS / IPS</label>
+                <div class="input-wrap">
+                    <input type="text" name="eps_ips" id="id_eps_ips"
+                           value="{{ form.eps_ips.value|default:'' }}" placeholder="Nombre de tu EPS o IPS"
+                           style="padding-left:14px;">
+                </div>
+                {% for error in form.eps_ips.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+        </div>
+
         <!-- Nombre y Apellido en fila -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div class="form-group">
@@ -121,4 +146,26 @@
 
     <p class="auth-footer">¿Ya tienes cuenta? <a href="{% url 'login' %}">Inicia sesión</a></p>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const rolSelect = document.getElementById('id_rol');
+    const camposPaciente = document.getElementById('campos-paciente');
+    
+    function toggleCamposPaciente() {
+        if (rolSelect && camposPaciente) {
+            if (rolSelect.value === 'cliente_paciente') {
+                camposPaciente.style.display = 'block';
+            } else {
+                camposPaciente.style.display = 'none';
+            }
+        }
+    }
+    
+    if (rolSelect) {
+        rolSelect.addEventListener('change', toggleCamposPaciente);
+        toggleCamposPaciente();
+    }
+});
+</script>
 {% endblock %}

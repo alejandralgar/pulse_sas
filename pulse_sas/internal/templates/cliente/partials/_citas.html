@@ -1,0 +1,122 @@
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECCIÓN: SOLICITAR CITAS (Con sub-pestañas: Solicitar / Mis Citas)-->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="cita" class="section-content" {% if seccion_activa != 'cita' and seccion_activa != 'miscitas' %}style="display:none"{% endif %}>
+    <div class="page-header">
+        <h1>Gestión de Citas</h1>
+        <p>Solicita una nueva cita o consulta el historial de tus citas registradas</p>
+    </div>
+
+    <!-- Navegación por pestañas (Sub-Pestañas) -->
+    <div class="tabs" data-tabs>
+        <button type="button" class="tab-btn {% if seccion_activa != 'miscitas' %}active{% endif %}"
+                data-tab="subtab-solicitar" onclick="switchSubTab('subtab-solicitar', this)">
+            📅 Solicitar Cita
+        </button>
+        <button type="button" class="tab-btn {% if seccion_activa == 'miscitas' %}active{% endif %}"
+                data-tab="subtab-miscitas" onclick="switchSubTab('subtab-miscitas', this)">
+            📋 Mis Citas
+        </button>
+    </div>
+
+    <!-- Sub-Pestaña 1: Solicitar Cita -->
+    <div id="subtab-solicitar" class="tab-panel {% if seccion_activa != 'miscitas' %}active{% endif %}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+
+            <!-- Formulario de solicitud -->
+            <div class="card">
+                <div class="card-title">Nueva cita médica</div>
+                <form method="post" action="{% url 'cliente_solicitar_cita' %}" id="form-cita">
+                    {% csrf_token %}
+                    <div class="form-grid" style="grid-template-columns:1fr;">
+                        {% for field in cita_form %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <span class="form-error">{{ field.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <div>
+                            <button type="submit" class="btn btn-primary" style="width:100%">
+                                Agendar Cita
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Calendario de disponibilidad -->
+            <div class="card">
+                <div class="card-title">Calendario de Disponibilidad</div>
+                <p style="font-size:0.82rem;color:var(--color-muted);margin-bottom:12px;">
+                    Selecciona un día en el calendario o en el campo de fecha para ver y filtrar las horas disponibles.
+                </p>
+                <div class="calendar-header">
+                    <button type="button" class="btn btn-outline btn-sm" id="cal-prev">&#8592;</button>
+                    <h3 id="cal-title"></h3>
+                    <button type="button" class="btn btn-outline btn-sm" id="cal-next">&#8594;</button>
+                </div>
+                <div class="calendar-grid" id="cal-nombres"></div>
+                <div class="calendar-grid" id="cal-dias" style="margin-top:4px;"></div>
+                <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:12px;font-size:0.78rem;color:var(--color-muted);">
+                    <span><span class="cal-dot blue" style="display:inline-block;vertical-align:middle;margin-right:4px;"></span>Tu cita registrada</span>
+                    <span style="color:var(--color-primary);font-weight:700;">■</span> Hoy
+                    <span style="opacity:0.5;font-style:italic;">✖ Fecha pasada (no disponible)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sub-Pestaña 2: Mis Citas -->
+    <div id="subtab-miscitas" class="tab-panel {% if seccion_activa == 'miscitas' %}active{% endif %}">
+        <div class="card">
+            <div class="card-title">Mis citas registradas</div>
+            {% if citas %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Tipo</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cita in citas %}
+                        <tr>
+                            <td>{{ cita.fecha_hora|date:"d/m/Y" }}</td>
+                            <td>{{ cita.fecha_hora|time:"h:i A" }}</td>
+                            <td>{{ cita.get_tipo_cita_display|default:"—" }}</td>
+                            <td>{{ cita.motivo }}</td>
+                            <td>
+                                {% if cita.estado == 'confirmada' %}
+                                    <span class="badge badge-info">Confirmada</span>
+                                {% elif cita.estado == 'pendiente' %}
+                                    <span class="badge badge-warning">Pendiente</span>
+                                {% elif cita.estado == 'cancelada' %}
+                                    <span class="badge badge-danger">Cancelada</span>
+                                {% elif cita.estado == 'reprogramada' %}
+                                    <span class="badge badge-gray">Reprogramada</span>
+                                {% else %}
+                                    <span class="badge badge-gray">{{ cita.estado }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--color-muted);text-align:center;padding:24px 0;">
+                Aún no tienes citas registradas.
+                <a href="#" onclick="switchSubTab('subtab-solicitar', document.querySelector('.tab-btn[data-tab=subtab-solicitar]'))"
+                   style="color:var(--color-primary);font-weight:600;">Solicitar una cita</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</section>
