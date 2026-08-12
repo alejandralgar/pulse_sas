@@ -4,6 +4,7 @@ from .models import (
     Antecedente,
     Ciudad,
     ContactoEmergencia,
+    Convenio,
     DatosAdministrativos,
     Diagnostico,
     ExamenComplementario,
@@ -11,6 +12,7 @@ from .models import (
     HistoriaClinica,
     HistoriaClinicaPersona,
     HistoriaEnfermedadActual,
+    Jornada,
     MotivoConsulta,
     Pais,
     PaisCiudad,
@@ -41,3 +43,5 @@ admin.site.register(Diagnostico)
 admin.site.register(PlanManejo)
 admin.site.register(DatosAdministrativos)
 admin.site.register(ContactoEmergencia)
+admin.site.register(Jornada)
+admin.site.register(Convenio)

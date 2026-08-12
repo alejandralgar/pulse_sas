@@ -1,9 +1,18 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 
 from .forms import ContactoEmergenciaForm, PerfilEditableForm
 from .models import ContactoEmergencia
+
+
+def _errores_form(form):
+    partes = []
+    for campo, errores in form.errors.items():
+        etiqueta = form.fields[campo].label if campo in form.fields else None
+        for error in errores:
+            partes.append(f'{etiqueta}: {error}' if etiqueta else error)
+    return ' '.join(partes)
 
 
 @login_required
@@ -22,9 +31,8 @@ def actualizar_perfil(request):
             request.user.email = form.cleaned_data['correo']
             request.user.save(update_fields=['email'])
             messages.success(request, 'Datos personales actualizados correctamente.')
-            return redirect('dashboard_cliente')
-    else:
-        form = PerfilEditableForm(instance=persona)
+        else:
+            messages.error(request, f'No se pudo actualizar tu perfil: {_errores_form(form)}')
 
     return redirect('dashboard_cliente')
 
@@ -46,6 +54,7 @@ def guardar_contacto_emergencia(request):
             contacto.paciente = persona
             contacto.save()
             messages.success(request, 'Persona de contacto guardada correctamente.')
-            return redirect('dashboard_cliente')
+        else:
+            messages.error(request, f'No se pudo guardar la persona de contacto: {_errores_form(form)}')
 
     return redirect('dashboard_cliente')

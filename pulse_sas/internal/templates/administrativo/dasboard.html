@@ -5,19 +5,19 @@
 {% block sidebar %}
 <div class="sidebar-section">Principal</div>
 <nav>
-    <a href="#" class="active" onclick="return showSection('resumen', this)">
+    <a href="#" id="nav-resumen" class="{% if seccion_activa == 'resumen' %}active{% endif %}" onclick="return showSection('resumen', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Resumen
     </a>
-    <a href="#" onclick="return showSection('empleados', this)">
+    <a href="#" id="nav-empleados" class="{% if seccion_activa == 'empleados' %}active{% endif %}" onclick="return showSection('empleados', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         Registrar Empleados
     </a>
-    <a href="#" onclick="return showSection('citas', this)">
+    <a href="#" id="nav-citas" class="{% if seccion_activa == 'citas' %}active{% endif %}" onclick="return showSection('citas', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         Calendario
     </a>
-    <a href="#" onclick="return showSection('convenios', this)">
+    <a href="#" id="nav-convenios" class="{% if seccion_activa == 'convenios' %}active{% endif %}" onclick="return showSection('convenios', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
         Empresas / Convenios
     </a>
@@ -86,12 +86,37 @@
     <div class="page-header"><h1>Empresas y Convenios</h1></div>
     <div class="card">
         <div class="card-title">Registrar Empresa / Convenio</div>
-        <form class="form-grid">
+        <form class="form-grid" method="post" action="{% url 'dashboard_administrativo' %}?seccion=convenios">
             {% csrf_token %}
-            <div class="form-group"><label>Nombre de la Empresa</label><input type="text" placeholder="Razón social"></div>
-            <div class="form-group"><label>NIT</label><input type="text" placeholder="900.123.456-7"></div>
-            <div class="form-group"><label>Teléfono</label><input type="tel" placeholder="Número de contacto"></div>
-            <div class="form-group"><label>Especialidad / Servicio</label><input type="text" placeholder="Ej: Cardiología"></div>
+            <input type="hidden" name="accion" value="crear_convenio">
+            <div class="form-group">
+                <label for="{{ convenio_form.nombre.id_for_label }}">Nombre de la Empresa</label>
+                {{ convenio_form.nombre }}
+                {% if convenio_form.nombre.errors %}
+                <ul class="field-errors">{% for error in convenio_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ convenio_form.nit.id_for_label }}">NIT</label>
+                {{ convenio_form.nit }}
+                {% if convenio_form.nit.errors %}
+                <ul class="field-errors">{% for error in convenio_form.nit.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ convenio_form.telefono.id_for_label }}">Teléfono</label>
+                {{ convenio_form.telefono }}
+                {% if convenio_form.telefono.errors %}
+                <ul class="field-errors">{% for error in convenio_form.telefono.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ convenio_form.especialidad.id_for_label }}">Especialidad / Servicio</label>
+                {{ convenio_form.especialidad }}
+                {% if convenio_form.especialidad.errors %}
+                <ul class="field-errors">{% for error in convenio_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
             <div class="form-full"><button type="submit" class="btn btn-primary">Guardar Convenio</button></div>
         </form>
     </div>
@@ -101,8 +126,11 @@
             <table>
                 <thead><tr><th>Empresa</th><th>NIT</th><th>Teléfono</th><th>Especialidad</th></tr></thead>
                 <tbody>
-                    <tr><td>Sanitas EPS</td><td>800.123.456-1</td><td>6017001122</td><td>General</td></tr>
-                    <tr><td>Compensar</td><td>860.043.129-2</td><td>6015556677</td><td>Pediatría</td></tr>
+                    {% for c in convenios %}
+                    <tr><td>{{ c.nombre }}</td><td>{{ c.nit }}</td><td>{{ c.telefono }}</td><td>{{ c.especialidad }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="4">Todavía no hay convenios registrados.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -119,5 +147,10 @@ function showSection(id, el) {
     if (el) el.classList.add('active');
     return false;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const seccion = '{{ seccion_activa|default:"resumen" }}';
+    showSection(seccion, document.getElementById('nav-' + seccion));
+});
 </script>
 {% endblock %}

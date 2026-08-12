@@ -36,6 +36,13 @@
 
     <!-- MAIN -->
     <main class="main-content">
+        {% if messages %}
+        <div class="alerts-wrap">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block main %}{% endblock %}
     </main>
 </div>

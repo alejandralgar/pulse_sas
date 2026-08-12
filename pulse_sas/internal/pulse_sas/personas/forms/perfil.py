@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Ciudad, ContactoEmergencia, Persona
+from ..models import Ciudad, ContactoEmergencia, Persona
 
 
 class PerfilEditableForm(forms.ModelForm):

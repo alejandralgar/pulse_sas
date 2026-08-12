@@ -59,6 +59,9 @@ class Rol(models.Model):
         CLIENTE_PACIENTE = 'cliente_paciente', 'Cliente / paciente'
         EMPRESA = 'empresa', 'Empresa'
         ADMINISTRATIVO = 'administrativo', 'Administrativo'
+        MEDICO = 'medico', 'Médico'
+        ENFERMERA = 'enfermera', 'Enfermera'
+        GUARDIA = 'guardia', 'Guardia de seguridad'
 
     nombre = models.CharField(max_length=50, unique=True)
     categoria = models.CharField(max_length=20, choices=Categoria.choices)
@@ -107,6 +110,7 @@ class Persona(models.Model):
     )
     roles = models.ManyToManyField(Rol, through='RolPersona', related_name='personas')
     tipos_sangre = models.ManyToManyField(TipoSangre, through='TipoSangrePersona', related_name='personas')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'persona'
@@ -374,3 +378,43 @@ class ContactoEmergencia(models.Model):
 
     def __str__(self):
         return f'{self.nombre_completo} ({self.parentesco}) → {self.paciente}'
+
+
+class Jornada(models.Model):
+    class TipoJornada(models.TextChoices):
+        MANANA = 'manana', 'Mañana'
+        TARDE = 'tarde', 'Tarde'
+        NOCHE = 'noche', 'Noche'
+
+    persona = models.ForeignKey(
+        Persona, on_delete=models.CASCADE, related_name='jornadas',
+        verbose_name='persona',
+    )
+    fecha = models.DateField()
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    tipo_jornada = models.CharField(max_length=10, choices=TipoJornada.choices)
+
+    class Meta:
+        verbose_name = 'jornada'
+        verbose_name_plural = 'jornadas'
+        ordering = ['-fecha', 'hora_inicio']
+
+    def __str__(self):
+        return f'{self.persona} - {self.fecha} ({self.get_tipo_jornada_display()})'
+
+
+class Convenio(models.Model):
+    nombre = models.CharField(max_length=150, verbose_name="Nombre de la Empresa")
+    nit = models.CharField(max_length=50, verbose_name="NIT")
+    telefono = models.CharField(max_length=50, verbose_name="Teléfono")
+    especialidad = models.CharField(max_length=150, verbose_name="Especialidad / Servicio")
+
+    class Meta:
+        db_table = 'convenio'
+        verbose_name = 'Convenio'
+        verbose_name_plural = 'Convenios'
+
+    def __str__(self):
+        return self.nombre
+

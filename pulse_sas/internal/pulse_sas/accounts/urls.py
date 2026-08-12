@@ -9,7 +9,6 @@ urlpatterns = [
     path('',                    views.login_view,         name='home'),
     path('login/',              views.login_view,         name='login'),
     path('logout/',             views.AccountsLogoutView.as_view(), name='logout'),
-    path('registro/',           views.registro,           name='registro'),
     path('dashboard/',          views.dashboard,          name='dashboard'),
 
     # ── Recuperar contraseña ─────────────────────────────────────────

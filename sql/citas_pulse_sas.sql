@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict eyxS6CYvgGnQEPbB8mCdAei7GWTdCflfrx5smzMl2aEsYwdi7tUCRRojY7vg6P7
+\restrict VFDzwXjmciO3MzhJzbq7J4UmveBplghYOXs892hFswMO3fZ3F7m1KWlyqT4LyRe
 
 -- Dumped from database version 18.0
 -- Dumped by pg_dump version 18.0
@@ -668,6 +668,7 @@ CREATE TABLE public.personas_persona (
     usuario_id integer,
     direccion character varying(255) NOT NULL,
     sexo character varying(1) NOT NULL,
+    fecha_creacion timestamp with time zone NOT NULL,
     CONSTRAINT personas_persona_edad_check CHECK ((edad >= 0))
 );
 
@@ -946,7 +947,9 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY public.auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-1	pbkdf2_sha256$1200000$76YtjGSC6XPjAFOPt66Qcc$UAys/9FiaDTfh76ACb6EHUB4pyZmdaEUpmnF2JdI59I=	2026-07-27 11:12:13.569015-05	t	admin			admin@pulsesas.local	t	t	2026-07-27 10:51:51.691115-05
+2	pbkdf2_sha256$1200000$M0oQMFctpQ3p4dKxDv6uOo$tbpO2NV5ynHPeAZLrMy3U0WZ6FewrP8vwHZbrygIqVs=	2026-07-27 11:49:21.842293-05	f	Anamaria			lopezgaranamaria@gmail.com	f	t	2026-07-27 11:44:13.598249-05
+8	pbkdf2_sha256$1200000$eIVau3HgGYJyLSJAtkxUwQ$D1oPIGOHwZCgxdPn6LyU8OhfmlAXzqP7RkeUHmGYXNI=	2026-07-29 08:46:33.122407-05	f	anamaria			lopezgaranamaria@gmail.com	f	t	2026-07-29 08:45:44.777722-05
+1	pbkdf2_sha256$1200000$76YtjGSC6XPjAFOPt66Qcc$UAys/9FiaDTfh76ACb6EHUB4pyZmdaEUpmnF2JdI59I=	2026-07-29 09:20:52.537498-05	t	admin			admin@pulsesas.local	t	t	2026-07-27 10:51:51.691115-05
 \.
 
 
@@ -1053,6 +1056,9 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 22	personas	0004_seed_capitales	2026-07-27 11:16:39.930748-05
 23	personas	0005_solo_colombia	2026-07-27 11:17:30.070745-05
 24	citas	0001_initial	2026-07-27 11:23:51.355583-05
+25	personas	0006_alter_rol_categoria	2026-07-29 08:31:47.812661-05
+26	personas	0007_fix_categoria_medico_enfermera	2026-07-29 08:31:48.037758-05
+27	personas	0008_persona_fecha_creacion	2026-07-29 09:20:20.958733-05
 \.
 
 
@@ -1061,7 +1067,16 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 --
 
 COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
-kd42fdzjt5ie987rltjaqduijfayon75	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1woNw5:7if7RjTsUbRtTe_uwsrhr89MiYeWcuX873P9mhqRatA	2026-08-10 11:12:13.571748-05
+prqhbmv4i9tvwtbxa4e9gwvsb66xac3g	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp4OW:q8pS7LMBix-zX5am4HnJzLif-e7c7uVIx2R0K0MoZ4w	2026-08-12 08:32:24.314972-05
+iyt61wtybghw047msis1qmq5tjwv9lu3	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp4Oz:7qqkGnA6BQE7r7P21kkoAH3xKKup8wxYZfS91kwbSjc	2026-08-12 08:32:53.330036-05
+3epiykjsfq11unjun66dtffapxu2ub1k	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp4PI:pHgFC2JsU3gksYbcLe-JB5kfKQZpAIM4gZzlf-3W90k	2026-08-12 08:33:12.668907-05
+45jji54mgg4iw18nrjmv7jptr1x8qxz4	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp4Pt:r5RX780kPOihIjU6Nu-5__uHm5WMMnipiRSvRbsvefE	2026-08-12 08:33:49.886962-05
+pktqvghh955rhttmqpcpqcyelcvvzqqo	.eJxVjEEOwiAQAP-yZ0NACoUevfcNZNkFqRpISnsy_t006UGvM5N5Q8B9K2HvaQ0LwwQDXH5ZRHqmegh-YL03Qa1u6xLFkYjTdjE3Tq_b2f4NCvYCE9DgLUpiLb3VziVjTGLNLjpF0WXMVnmUbCzRSKTZXcespImWrUykFHy-7ew4Nw:1wp4QA:U4IZYyP6-QEgW3d0PXs6XmrnA3YXuOB4LbU_oN3Widk	2026-08-12 08:34:06.905507-05
+d6cfmcahlyiobh7xvdaysql3a5kq2sp7	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp4YQ:wkfTlaMYyoMA5HZ3dStc0OuMPAsmbzD-LOjGcGiYGSM	2026-08-12 08:42:38.907582-05
+8bf75vhq58l2jdwgn7n2fbkqpr0ia166	.eJxVjEEOwiAQAP-yZ0OAQik9evcNZNndStXQpLQn499Nkx70OjOZNyTct5L2JmuaGUbwcPllGekp9RD8wHpfFC11W-esjkSdtqnbwvK6nu3foGArMEIMHI1MWgcO4kjHbLMzjjrWlrzNGLz40IvTHQczCPaTNTQQkxWOXsPnC-KZN_8:1wp4YR:aaJc2-Ny4ZiNf2vQ-TuquEdPxkTD2ufbtzuvZC86Xvk	2026-08-12 08:42:39.790213-05
+zyglm3elb1h1784rnzbfy72jyjwz2etr	.eJxVjDEKwzAMAP-iuRg5thOTsXvfYGRLqtOWBOJkKv17CWRo17vj3pBo32ram6xpYhhhgMsvy1SeMh-CHzTfF1OWeVunbI7EnLaZ28Lyup7t36BSqzBCZz0qBkbXlT6QcnRZgnKhIBi8i55sRHVZVCJn8iVGLNKhejtQ38PnC-7uOFI:1wp4YT:AVpw4NvoY9WkwwQOxRfCHVpqU1x7shOGEGjSo8oguXs	2026-08-12 08:42:41.476965-05
+rr7mes0qmdpg8nporj2ymvrhlorvoc4r	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp52j:BcxDrI3ZFxbLEachZBFKrp41mmmMayQBwD9rtP581Ck	2026-08-12 09:13:57.89646-05
+3mzc21pkjk5ko2ohugdl2cfukzxkwndo	.eJxVjEsOgjAUAO_y1qaRV_qBpXvOQN6ntaiBhMLKeHdDwkK3M5N5w0j7Vsa9pnWcFHpo4PLLmOSZ5kPog-b7YmSZt3VicyTmtNUMi6bX7Wz_BoVqgR5iQN8ii7PqbEAV8cyJExM3nKMj0abz2Ga-OhFBppiDWNd5wUya4fMFCPY5dQ:1wp59S:b_DQH75K_nWgJhlT7L_P0B6831hiLf8Uqx5F8sme5TY	2026-08-12 09:20:54.255299-05
 \.
 
 
@@ -1230,7 +1245,8 @@ COPY public.personas_paisciudad (id, ciudad_id, pais_id) FROM stdin;
 -- Data for Name: personas_persona; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.personas_persona (id, nombre, apellido, cedula, edad, telefono_personal, telefono_acompanante, correo, ciudad_nacimiento_id, pais_nacimiento_id, usuario_id, direccion, sexo) FROM stdin;
+COPY public.personas_persona (id, nombre, apellido, cedula, edad, telefono_personal, telefono_acompanante, correo, ciudad_nacimiento_id, pais_nacimiento_id, usuario_id, direccion, sexo, fecha_creacion) FROM stdin;
+6	Anamaria	Lopez	1010	26			lopezgaranamaria@gmail.com	\N	\N	8			2026-07-29 09:20:20.588433-05
 \.
 
 
@@ -1252,10 +1268,10 @@ COPY public.personas_rol (id, nombre, categoria) FROM stdin;
 3	empresa	empresa
 4	gerente	administrativo
 5	supervisor	administrativo
-6	medico	administrativo
-7	enfermera	administrativo
 8	contadora	administrativo
 9	recepcionista	administrativo
+6	medico	medico
+7	enfermera	enfermera
 \.
 
 
@@ -1264,6 +1280,7 @@ COPY public.personas_rol (id, nombre, categoria) FROM stdin;
 --
 
 COPY public.personas_rolpersona (id, fecha_asignacion, persona_id, rol_id) FROM stdin;
+6	2026-07-29 08:45:45.375913-05	6	5
 \.
 
 
@@ -1323,7 +1340,7 @@ SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 1, false);
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.auth_user_id_seq', 1, true);
+SELECT pg_catalog.setval('public.auth_user_id_seq', 10, true);
 
 
 --
@@ -1365,7 +1382,7 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 26, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 24, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 27, true);
 
 
 --
@@ -1456,7 +1473,7 @@ SELECT pg_catalog.setval('public.personas_paisciudad_id_seq', 228, true);
 -- Name: personas_persona_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.personas_persona_id_seq', 1, false);
+SELECT pg_catalog.setval('public.personas_persona_id_seq', 8, true);
 
 
 --
@@ -1470,14 +1487,14 @@ SELECT pg_catalog.setval('public.personas_planmanejo_id_seq', 1, false);
 -- Name: personas_rol_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.personas_rol_id_seq', 9, true);
+SELECT pg_catalog.setval('public.personas_rol_id_seq', 10, true);
 
 
 --
 -- Name: personas_rolpersona_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.personas_rolpersona_id_seq', 1, false);
+SELECT pg_catalog.setval('public.personas_rolpersona_id_seq', 8, true);
 
 
 --
@@ -2462,5 +2479,5 @@ ALTER TABLE ONLY public.personas_tiposangrepersona
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eyxS6CYvgGnQEPbB8mCdAei7GWTdCflfrx5smzMl2aEsYwdi7tUCRRojY7vg6P7
+\unrestrict VFDzwXjmciO3MzhJzbq7J4UmveBplghYOXs892hFswMO3fZ3F7m1KWlyqT4LyRe
 
