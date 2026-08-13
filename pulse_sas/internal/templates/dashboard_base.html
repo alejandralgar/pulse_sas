@@ -17,14 +17,36 @@
         Pulse SAS
     </a>
     <div class="topbar-right">
-        <div class="topbar-user">
+        <div class="topbar-user" id="topbar-user-menu">
             <div class="topbar-avatar">{{ user.username|slice:":2"|upper }}</div>
             <span>{{ user.get_full_name|default:user.username }}</span>
+            <div class="topbar-dropdown" id="topbar-dropdown">
+                <div class="dropdown-header">
+                    <div class="dropdown-avatar">{{ user.username|slice:":2"|upper }}</div>
+                    <div class="dropdown-name">{{ user.get_full_name|default:user.username }}</div>
+                    <div class="dropdown-role">
+                        {% for rol in user.persona.roles.all %}{{ rol.get_categoria_display }}{% if not forloop.last %}, {% endif %}{% empty %}Sin rol asignado{% endfor %}
+                    </div>
+                </div>
+                <hr>
+                <a href="{% url 'mi_perfil' %}">
+                    <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
+                    Configuración de cuenta
+                </a>
+                <span class="dropdown-item disabled">
+                    <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                    Notificaciones
+                </span>
+                <hr>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-danger">
+                        <svg class="dropdown-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        Cerrar sesión
+                    </button>
+                </form>
+            </div>
         </div>
-        <form method="post" action="{% url 'logout' %}" style="margin:0;">
-            {% csrf_token %}
-            <button type="submit" class="btn-logout">Salir</button>
-        </form>
     </div>
 </header>
 
@@ -36,12 +58,31 @@
 
     <!-- MAIN -->
     <main class="main-content">
+        {% if messages %}
+        <div class="alerts-wrap">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% block main %}{% endblock %}
     </main>
 </div>
 
 {% block extra_js %}{% endblock %}
 <script>
+// Menú del usuario (topbar)
+document.addEventListener('click', (e) => {
+    const menu = document.getElementById('topbar-user-menu');
+    const dropdown = document.getElementById('topbar-dropdown');
+    if (!menu || !dropdown) return;
+    if (menu.contains(e.target)) {
+        dropdown.classList.toggle('open');
+    } else {
+        dropdown.classList.remove('open');
+    }
+});
+
 // Tabs simple
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {

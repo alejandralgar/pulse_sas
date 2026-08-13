@@ -5,26 +5,18 @@
 {% block sidebar %}
 <div class="sidebar-section">Principal</div>
 <nav>
-    <a href="#" class="active" onclick="showSection('resumen', this)">
+    <a href="#" id="nav-resumen" class="{% if seccion_activa == 'resumen' %}active{% endif %}" onclick="return showSection('resumen', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Resumen
     </a>
 </nav>
 <div class="sidebar-section">Gestión</div>
 <nav>
-    <a href="#" onclick="showSection('roles', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-        Roles
+    <a href="#" id="nav-roles-usuarios" class="{% if seccion_activa == 'roles' or seccion_activa == 'usuarios' or seccion_activa == 'roles_usuarios' %}active{% endif %}" onclick="return showSection('roles_usuarios', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0zM17 14v6m-3-3h6"/></svg>
+        Roles y Usuarios
     </a>
-    <a href="#" onclick="showSection('usuarios', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-        Usuarios
-    </a>
-    <a href="#" onclick="showSection('citas', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Calendario
-    </a>
-    <a href="#" onclick="showSection('convenios', this)">
+    <a href="#" id="nav-convenios" class="{% if seccion_activa == 'convenios' %}active{% endif %}" onclick="return showSection('convenios', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
         Empresas / Convenios
     </a>
@@ -101,128 +93,346 @@
             </table>
         </div>
     </div>
-</section>
 
-<!-- ROLES -->
-<section id="roles" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Gestión de Roles</h1>
-        <p>Crea y administra los roles del sistema</p>
-    </div>
-
+    <!-- Personal en turno ahora -->
     <div class="card">
-        <div class="card-title">Crear Rol</div>
-        <form class="form-grid">
-            {% csrf_token %}
-            <div class="form-group">
-                <label>Nombre del Rol</label>
-                <input type="text" placeholder="Ej: Recepcionista">
-            </div>
-            <div class="form-group">
-                <label>Categoría</label>
-                <select>
-                    <option value="">Seleccionar...</option>
-                    <option>Admin</option>
-                    <option>Administrativo</option>
-                    <option>Médico</option>
-                    <option>Enfermera</option>
-                    <option>Guardia de seguridad</option>
-                    <option>Paciente</option>
-                    <option>Programador</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Descripción</label>
-                <input type="text" placeholder="Breve descripción del rol">
-            </div>
-            <div class="form-full">
-                <button type="submit" class="btn btn-primary">Crear Rol</button>
-            </div>
-        </form>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Roles existentes</div>
+        <div class="card-title">Personal en turno ahora</div>
         <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Rol</th><th>Categoría</th><th>Usuarios asignados</th><th>Acciones</th></tr>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Documento</th>
+                        <th>Día</th>
+                        <th>Hora</th>
+                        <th>Jornada</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    <tr><td>Médico</td><td><span class="badge badge-info">Médico</span></td><td>8</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
-                    <tr><td>Paciente</td><td><span class="badge badge-gray">Paciente</span></td><td>235</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
-                    <tr><td>Enfermera</td><td><span class="badge badge-warning">Enfermera</span></td><td>12</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
-                    <tr><td>Recepcionista</td><td><span class="badge badge-success">Administrativo</span></td><td>4</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
-                    <tr><td>Programador</td><td><span class="badge badge-danger">Mantenimiento</span></td><td>2</td><td><button class="btn btn-outline btn-sm">Editar</button></td></tr>
+                    {% for jornada in personal_trabajando %}
+                    <tr>
+                        <td>{{ jornada.persona.nombre }} {{ jornada.persona.apellido }}</td>
+                        <td>{{ jornada.persona.cedula }}</td>
+                        <td>{{ jornada.fecha|date:"d/m/Y" }}</td>
+                        <td>{{ jornada.hora_inicio|time:"H:i" }} - {{ jornada.hora_fin|time:"H:i" }}</td>
+                        <td><span class="badge badge-info">{{ jornada.get_tipo_jornada_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No hay personal en turno en este momento.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-</section>
 
-<!-- USUARIOS -->
-<section id="usuarios" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Registro de Usuarios</h1>
-        <p>Crea cuentas para todos los roles del sistema</p>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Nuevo Usuario</div>
-        <form class="form-grid">
-            {% csrf_token %}
-            <div class="form-group">
-                <label>Nombre</label>
-                <input type="text" placeholder="Nombre completo">
-            </div>
-            <div class="form-group">
-                <label>Apellido</label>
-                <input type="text" placeholder="Apellido">
-            </div>
-            <div class="form-group">
-                <label>Cédula / Documento</label>
-                <input type="text" placeholder="Número de documento">
-            </div>
-            <div class="form-group">
-                <label>Correo</label>
-                <input type="email" placeholder="correo@ejemplo.com">
-            </div>
-            <div class="form-group">
-                <label>Teléfono</label>
-                <input type="tel" placeholder="Número de celular">
-            </div>
-            <div class="form-group">
-                <label>Rol</label>
-                <select>
-                    <option value="">Seleccionar rol...</option>
-                    <option>Médico</option>
-                    <option>Enfermera</option>
-                    <option>Paciente</option>
-                    <option>Secretaria</option>
-                    <option>Recepcionista</option>
-                    <option>Guardia de seguridad</option>
-                    <option>Programador</option>
-                    <option>Admin</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Contraseña temporal</label>
-                <input type="password" placeholder="Contraseña inicial">
-            </div>
-            <div class="form-full">
-                <button type="submit" class="btn btn-primary">Registrar Usuario</button>
-            </div>
-        </form>
-    </div>
-</section>
-
-<!-- CALENDARIO -->
-<section id="citas" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Calendario de Citas</h1>
-        <p>Visualiza las citas de pacientes, médicos y enfermeras</p>
-    </div>
+    <!-- Calendario -->
     {% include "partials/calendario.html" %}
+</section>
+
+<!-- ROLES Y USUARIOS -->
+<section id="roles_usuarios" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Gestión de Roles y Usuarios</h1>
+        <p>Crea roles y registra usuarios para el sistema</p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-btn-roles" onclick="switchRolesUsuariosTab('roles', this)">Gestión de Roles</button>
+        <button class="tab-btn" id="tab-btn-usuarios" onclick="switchRolesUsuariosTab('usuarios', this)">Registro de Usuarios</button>
+    </div>
+
+    <!-- Tab Content: Roles -->
+    <div id="subtab-roles" class="tab-panel active">
+        <div class="card">
+            <div class="card-title">Crear Rol</div>
+            <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=roles">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="crear_rol">
+                <div class="form-group">
+                    <label for="{{ rol_form.nombre.id_for_label }}">Nombre del Rol</label>
+                    {{ rol_form.nombre }}
+                    {% if rol_form.nombre.errors %}
+                    <ul class="field-errors">{% for error in rol_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ rol_form.categoria.id_for_label }}">Categoría</label>
+                    {{ rol_form.categoria }}
+                    {% if rol_form.categoria.errors %}
+                    <ul class="field-errors">{% for error in rol_form.categoria.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <button type="submit" class="btn btn-primary">Crear Rol</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Roles existentes</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Rol</th><th>Categoría</th><th>Usuarios asignados</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for rol in roles %}
+                        <tr>
+                            <td>{{ rol.nombre }}</td>
+                            <td><span class="badge badge-info">{{ rol.get_categoria_display }}</span></td>
+                            <td>{{ rol.num_usuarios }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3">Todavía no hay roles creados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content: Usuarios -->
+    <div id="subtab-usuarios" class="tab-panel">
+        {% if persona_editar %}
+        <div class="card">
+            <div class="card-title">Editar Usuario — {{ persona_editar.nombre }} {{ persona_editar.apellido }}</div>
+            <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios&editar={{ persona_editar.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="editar_usuario">
+                <input type="hidden" name="persona_id" value="{{ persona_editar.id }}">
+                <div class="form-group">
+                    <label for="{{ editar_form.nombre.id_for_label }}">Nombre</label>
+                    {{ editar_form.nombre }}
+                    {% if editar_form.nombre.errors %}
+                    <ul class="field-errors">{% for error in editar_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.apellido.id_for_label }}">Apellido</label>
+                    {{ editar_form.apellido }}
+                    {% if editar_form.apellido.errors %}
+                    <ul class="field-errors">{% for error in editar_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.cedula.id_for_label }}">Cédula / Documento</label>
+                    {{ editar_form.cedula }}
+                    {% if editar_form.cedula.errors %}
+                    <ul class="field-errors">{% for error in editar_form.cedula.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                    {{ editar_form.fecha_nacimiento }}
+                    {% if editar_form.fecha_nacimiento.errors %}
+                    <ul class="field-errors">{% for error in editar_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.correo.id_for_label }}">Correo</label>
+                    {{ editar_form.correo }}
+                    {% if editar_form.correo.errors %}
+                    <ul class="field-errors">{% for error in editar_form.correo.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.especialidad.id_for_label }}">Especialidad (solo médicos)</label>
+                    {{ editar_form.especialidad }}
+                    {% if editar_form.especialidad.errors %}
+                    <ul class="field-errors">{% for error in editar_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <label>Rol(es)</label>
+                    {{ editar_form.roles }}
+                    {% if editar_form.roles.errors %}
+                    <ul class="field-errors">{% for error in editar_form.roles.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full" style="display:flex;gap:10px;">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{% url 'dashboard_admin' %}?seccion=usuarios" class="btn btn-outline">Cancelar</a>
+                </div>
+            </form>
+        </div>
+
+        {% if password_form %}
+        <div class="card">
+            <div class="card-title">Cambiar Contraseña</div>
+            <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios&editar={{ persona_editar.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="cambiar_password">
+                <input type="hidden" name="persona_id" value="{{ persona_editar.id }}">
+                <div class="form-group">
+                    <label for="{{ password_form.new_password1.id_for_label }}">Nueva contraseña</label>
+                    {{ password_form.new_password1 }}
+                    {% if password_form.new_password1.errors %}
+                    <ul class="field-errors">{% for error in password_form.new_password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ password_form.new_password2.id_for_label }}">Confirmar nueva contraseña</label>
+                    {{ password_form.new_password2 }}
+                    {% if password_form.new_password2.errors %}
+                    <ul class="field-errors">{% for error in password_form.new_password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-title">Cambiar Contraseña</div>
+            <p>Este registro no tiene una cuenta de acceso asociada, no se puede cambiar contraseña.</p>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="card">
+            <div class="card-title">Nuevo Usuario</div>
+            <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="crear_usuario">
+                <div class="form-group">
+                    <label for="{{ usuario_form.nombre.id_for_label }}">Nombre</label>
+                    {{ usuario_form.nombre }}
+                    {% if usuario_form.nombre.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.apellido.id_for_label }}">Apellido</label>
+                    {{ usuario_form.apellido }}
+                    {% if usuario_form.apellido.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.cedula.id_for_label }}">Cédula / Documento</label>
+                    {{ usuario_form.cedula }}
+                    {% if usuario_form.cedula.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.cedula.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                    {{ usuario_form.fecha_nacimiento }}
+                    {% if usuario_form.fecha_nacimiento.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.username.id_for_label }}">Usuario</label>
+                    {{ usuario_form.username }}
+                    {% if usuario_form.username.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.email.id_for_label }}">Correo</label>
+                    {{ usuario_form.email }}
+                    {% if usuario_form.email.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.password1.id_for_label }}">Contraseña</label>
+                    {{ usuario_form.password1 }}
+                    {% if usuario_form.password1.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.password2.id_for_label }}">Confirmar contraseña</label>
+                    {{ usuario_form.password2 }}
+                    {% if usuario_form.password2.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.especialidad.id_for_label }}">Especialidad (solo médicos)</label>
+                    {{ usuario_form.especialidad }}
+                    {% if usuario_form.especialidad.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <label>Rol(es)</label>
+                    {{ usuario_form.roles }}
+                    {% if usuario_form.roles.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.roles.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <button type="submit" class="btn btn-primary">Registrar Usuario</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-title">Usuarios registrados</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Nombre</th><th>Cédula</th><th>Usuario</th><th>Correo</th><th>Rol(es)</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for p in usuarios %}
+                        <tr>
+                            <td>{{ p.nombre }} {{ p.apellido }}</td>
+                            <td>{{ p.cedula }}</td>
+                            <td>{{ p.usuario.username|default:"—" }}</td>
+                            <td>{{ p.correo }}</td>
+                            <td>
+                                {% for rol in p.roles.all %}
+                                <span class="badge badge-info">{{ rol.get_categoria_display }}</span>
+                                {% empty %}
+                                <span class="badge badge-gray">Sin rol</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if p.usuario %}
+                                    {% if p.usuario.is_active %}
+                                    <span class="badge badge-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge badge-gray">Inactivo</span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="badge badge-gray">Sin cuenta</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.fecha_creacion|date:"Y-m-d H:i" }}</td>
+                            <td style="display:flex;gap:6px;">
+                                <a href="{% url 'dashboard_admin' %}?seccion=usuarios&editar={{ p.id }}" class="btn btn-outline btn-sm">Editar</a>
+                                {% if p.usuario and p.usuario_id != request.user.id %}
+                                <form method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios" {% if p.usuario.is_active %}onsubmit="return confirm('¿Desactivar a {{ p.nombre }} {{ p.apellido }}? No podrá iniciar sesión hasta reactivarlo.');"{% endif %}>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="toggle_activo">
+                                    <input type="hidden" name="persona_id" value="{{ p.id }}">
+                                    <button type="submit" class="btn btn-outline btn-sm">{% if p.usuario.is_active %}Desactivar{% else %}Activar{% endif %}</button>
+                                </form>
+                                {% endif %}
+                                {% if p.usuario_id != request.user.id %}
+                                <form method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios" onsubmit="return confirm('¿Eliminar a {{ p.nombre }} {{ p.apellido }}? Esta acción no se puede deshacer.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="eliminar_usuario">
+                                    <input type="hidden" name="persona_id" value="{{ p.id }}">
+                                    <button type="submit" class="btn btn-outline btn-sm" style="color:#dc3545;">Eliminar</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="8">Todavía no hay usuarios registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- CONVENIOS -->
@@ -234,23 +444,36 @@
 
     <div class="card">
         <div class="card-title">Registrar Empresa / Convenio</div>
-        <form class="form-grid">
+        <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=convenios">
             {% csrf_token %}
+            <input type="hidden" name="accion" value="crear_convenio">
             <div class="form-group">
-                <label>Nombre de la Empresa</label>
-                <input type="text" placeholder="Razón social">
+                <label for="{{ convenio_form.nombre.id_for_label }}">Nombre de la Empresa</label>
+                {{ convenio_form.nombre }}
+                {% if convenio_form.nombre.errors %}
+                <ul class="field-errors">{% for error in convenio_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
             </div>
             <div class="form-group">
-                <label>NIT</label>
-                <input type="text" placeholder="900.123.456-7">
+                <label for="{{ convenio_form.nit.id_for_label }}">NIT</label>
+                {{ convenio_form.nit }}
+                {% if convenio_form.nit.errors %}
+                <ul class="field-errors">{% for error in convenio_form.nit.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
             </div>
             <div class="form-group">
-                <label>Teléfono de Contacto</label>
-                <input type="tel" placeholder="Número de contacto">
+                <label for="{{ convenio_form.telefono.id_for_label }}">Teléfono de Contacto</label>
+                {{ convenio_form.telefono }}
+                {% if convenio_form.telefono.errors %}
+                <ul class="field-errors">{% for error in convenio_form.telefono.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
             </div>
             <div class="form-group">
-                <label>Especialidad / Servicio</label>
-                <input type="text" placeholder="Ej: Cardiología, Pediatría">
+                <label for="{{ convenio_form.especialidad.id_for_label }}">Especialidad / Servicio</label>
+                {{ convenio_form.especialidad }}
+                {% if convenio_form.especialidad.errors %}
+                <ul class="field-errors">{% for error in convenio_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
             </div>
             <div class="form-full">
                 <button type="submit" class="btn btn-primary">Guardar Convenio</button>
@@ -263,19 +486,17 @@
         <div class="table-wrap">
             <table>
                 <thead>
-                    <tr><th>Empresa</th><th>NIT</th><th>Teléfono</th><th>Especialidad</th><th>Acciones</th></tr>
+                    <tr><th>Empresa</th><th>NIT</th><th>Teléfono</th><th>Especialidad</th></tr>
                 </thead>
                 <tbody>
+                    {% for c in convenios %}
                     <tr>
-                        <td>Sanitas EPS</td><td>800.123.456-1</td><td>6017001122</td>
-                        <td>General</td>
-                        <td><button class="btn btn-outline btn-sm">Editar</button></td>
+                        <td>{{ c.nombre }}</td><td>{{ c.nit }}</td><td>{{ c.telefono }}</td>
+                        <td>{{ c.especialidad }}</td>
                     </tr>
-                    <tr>
-                        <td>Compensar</td><td>860.043.129-2</td><td>6015556677</td>
-                        <td>Pediatría</td>
-                        <td><button class="btn btn-outline btn-sm">Editar</button></td>
-                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">Todavía no hay convenios registrados.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -292,5 +513,30 @@ function showSection(id, el) {
     if (el) el.classList.add('active');
     return false;
 }
+
+function switchRolesUsuariosTab(subtab, btn) {
+    document.getElementById('subtab-roles').classList.remove('active');
+    document.getElementById('subtab-usuarios').classList.remove('active');
+    
+    document.getElementById('tab-btn-roles').classList.remove('active');
+    document.getElementById('tab-btn-usuarios').classList.remove('active');
+    
+    document.getElementById('subtab-' + subtab).classList.add('active');
+    btn.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const seccion = '{{ seccion_activa|default:"resumen" }}';
+    if (seccion === 'roles' || seccion === 'usuarios') {
+        showSection('roles_usuarios', document.getElementById('nav-roles-usuarios'));
+        if (seccion === 'usuarios') {
+            switchRolesUsuariosTab('usuarios', document.getElementById('tab-btn-usuarios'));
+        } else {
+            switchRolesUsuariosTab('roles', document.getElementById('tab-btn-roles'));
+        }
+    } else {
+        showSection(seccion, document.getElementById('nav-' + seccion));
+    }
+});
 </script>
 {% endblock %}

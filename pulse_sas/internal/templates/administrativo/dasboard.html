@@ -5,19 +5,22 @@
 {% block sidebar %}
 <div class="sidebar-section">Principal</div>
 <nav>
-    <a href="#" class="active" onclick="return showSection('resumen', this)">
+    <a href="#" id="nav-resumen" class="{% if seccion_activa == 'resumen' %}active{% endif %}" onclick="return showSection('resumen', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Resumen
     </a>
-    <a href="#" onclick="return showSection('empleados', this)">
+    {% if es_recepcionista %}
+    <a href="#" id="nav-citas" class="{% if seccion_activa == 'citas' %}active{% endif %}" onclick="return showSection('citas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Citas pendientes
+        {% if citas_pendientes %}<span class="badge badge-warning" style="margin-left:auto;">{{ citas_pendientes|length }}</span>{% endif %}
+    </a>
+    {% endif %}
+    <a href="#" id="nav-empleados" class="{% if seccion_activa == 'empleados' %}active{% endif %}" onclick="return showSection('empleados', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         Registrar Empleados
     </a>
-    <a href="#" onclick="return showSection('citas', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Calendario
-    </a>
-    <a href="#" onclick="return showSection('convenios', this)">
+    <a href="#" id="nav-convenios" class="{% if seccion_activa == 'convenios' %}active{% endif %}" onclick="return showSection('convenios', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
         Empresas / Convenios
     </a>
@@ -49,49 +52,204 @@
             </table>
         </div>
     </div>
+    {% include "partials/calendario.html" %}
 </section>
+
+{% if es_recepcionista %}
+<section id="citas" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Citas pendientes</h1>
+        <p>Asigná médico a las citas que solicitaron los pacientes -- el sistema sugiere uno libre a esa hora.</p>
+    </div>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora</th><th>Asignar médico</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in citas_pendientes %}
+                    <tr>
+                        <td>{{ item.cita.persona.nombre }} {{ item.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ item.cita.persona.cedula }}</span></td>
+                        <td>{{ item.cita.get_tipo_cita_display|default:"—" }}</td>
+                        <td>{{ item.cita.motivo }}</td>
+                        <td>{{ item.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            {% if item.candidatos %}
+                            <form method="post" action="{% url 'dashboard_administrativo' %}?seccion=citas" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="asignar_medico">
+                                <input type="hidden" name="cita_id" value="{{ item.cita.id }}">
+                                <select name="medico_id">
+                                    {% for c in item.candidatos %}
+                                    <option value="{{ c.persona.id }}"
+                                        {% if item.sugerido.id == c.persona.id %}selected{% endif %}
+                                        {% if c.ocupado %}disabled{% endif %}>
+                                        {{ c.persona.nombre }} {{ c.persona.apellido }}{% if c.persona.especialidad %} ({{ c.persona.especialidad }}){% endif %}{% if c.ocupado %} -- ocupado a esa hora{% elif c.en_turno %} -- en turno{% else %} -- sin jornada registrada{% endif %}{% if item.sugerido.id == c.persona.id %} ★ sugerido{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
+                            </form>
+                            {% else %}
+                            <span class="badge badge-gray">No hay médicos registrados</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No hay citas pendientes por asignar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <section id="empleados" class="section-content" style="display:none;">
     <div class="page-header"><h1>Registrar Empleados</h1><p>Médicos, enfermeras, gerencia y más</p></div>
     <div class="card">
         <div class="card-title">Nuevo Empleado</div>
-        <form class="form-grid">
+        <form class="form-grid" method="post" action="{% url 'dashboard_administrativo' %}?seccion=empleados">
             {% csrf_token %}
-            <div class="form-group"><label>Nombre</label><input type="text" placeholder="Nombre completo"></div>
-            <div class="form-group"><label>Apellido</label><input type="text" placeholder="Apellido"></div>
-            <div class="form-group"><label>Cédula</label><input type="text" placeholder="Número de documento"></div>
-            <div class="form-group"><label>Correo</label><input type="email" placeholder="correo@pulse.co"></div>
-            <div class="form-group"><label>Teléfono</label><input type="tel" placeholder="Número celular"></div>
+            <input type="hidden" name="accion" value="crear_empleado">
             <div class="form-group">
-                <label>Rol / Cargo</label>
-                <select>
-                    <option value="">Seleccionar...</option>
-                    <option>Médico</option><option>Enfermera</option><option>Secretaria</option>
-                    <option>Recepcionista</option><option>Guardia de seguridad</option><option>Programador</option>
-                </select>
+                <label for="{{ empleado_form.nombre.id_for_label }}">Nombre</label>
+                {{ empleado_form.nombre }}
+                {% if empleado_form.nombre.errors %}
+                <ul class="field-errors">{% for error in empleado_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
             </div>
-            <div class="form-group"><label>Especialidad (si aplica)</label><input type="text" placeholder="Ej: Cardiología"></div>
-            <div class="form-group"><label>Contraseña temporal</label><input type="password" placeholder="Contraseña inicial"></div>
+            <div class="form-group">
+                <label for="{{ empleado_form.apellido.id_for_label }}">Apellido</label>
+                {{ empleado_form.apellido }}
+                {% if empleado_form.apellido.errors %}
+                <ul class="field-errors">{% for error in empleado_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.cedula.id_for_label }}">Cédula</label>
+                {{ empleado_form.cedula }}
+                {% if empleado_form.cedula.errors %}
+                <ul class="field-errors">{% for error in empleado_form.cedula.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                {{ empleado_form.fecha_nacimiento }}
+                {% if empleado_form.fecha_nacimiento.errors %}
+                <ul class="field-errors">{% for error in empleado_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.username.id_for_label }}">Usuario</label>
+                {{ empleado_form.username }}
+                {% if empleado_form.username.errors %}
+                <ul class="field-errors">{% for error in empleado_form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.email.id_for_label }}">Correo</label>
+                {{ empleado_form.email }}
+                {% if empleado_form.email.errors %}
+                <ul class="field-errors">{% for error in empleado_form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.password1.id_for_label }}">Contraseña temporal</label>
+                {{ empleado_form.password1 }}
+                {% if empleado_form.password1.errors %}
+                <ul class="field-errors">{% for error in empleado_form.password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.password2.id_for_label }}">Confirmar contraseña</label>
+                {{ empleado_form.password2 }}
+                {% if empleado_form.password2.errors %}
+                <ul class="field-errors">{% for error in empleado_form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.especialidad.id_for_label }}">Especialidad (solo médicos)</label>
+                {{ empleado_form.especialidad }}
+                {% if empleado_form.especialidad.errors %}
+                <ul class="field-errors">{% for error in empleado_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-full">
+                <label>Rol / Cargo</label>
+                {{ empleado_form.roles }}
+                {% if empleado_form.roles.errors %}
+                <ul class="field-errors">{% for error in empleado_form.roles.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
             <div class="form-full"><button type="submit" class="btn btn-primary">Registrar Empleado</button></div>
         </form>
     </div>
-</section>
 
-<section id="citas" class="section-content" style="display:none;">
-    <div class="page-header"><h1>Calendario de Citas</h1></div>
-    {% include "partials/calendario.html" %}
+    <div class="card">
+        <div class="card-title">Empleados registrados</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Nombre</th><th>Cédula</th><th>Usuario</th><th>Correo</th><th>Rol</th><th>Registrado</th></tr></thead>
+                <tbody>
+                    {% for p in empleados %}
+                    <tr>
+                        <td>{{ p.nombre }} {{ p.apellido }}</td>
+                        <td>{{ p.cedula }}</td>
+                        <td>{{ p.usuario.username|default:"—" }}</td>
+                        <td>{{ p.correo }}</td>
+                        <td>
+                            {% for rol in p.roles.all %}
+                            <span class="badge badge-info">{{ rol.get_categoria_display }}</span>
+                            {% endfor %}
+                        </td>
+                        <td>{{ p.fecha_creacion|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6">Todavía no hay empleados registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </section>
 
 <section id="convenios" class="section-content" style="display:none;">
     <div class="page-header"><h1>Empresas y Convenios</h1></div>
     <div class="card">
         <div class="card-title">Registrar Empresa / Convenio</div>
-        <form class="form-grid">
+        <form class="form-grid" method="post" action="{% url 'dashboard_administrativo' %}?seccion=convenios">
             {% csrf_token %}
-            <div class="form-group"><label>Nombre de la Empresa</label><input type="text" placeholder="Razón social"></div>
-            <div class="form-group"><label>NIT</label><input type="text" placeholder="900.123.456-7"></div>
-            <div class="form-group"><label>Teléfono</label><input type="tel" placeholder="Número de contacto"></div>
-            <div class="form-group"><label>Especialidad / Servicio</label><input type="text" placeholder="Ej: Cardiología"></div>
+            <input type="hidden" name="accion" value="crear_convenio">
+            <div class="form-group">
+                <label for="{{ convenio_form.nombre.id_for_label }}">Nombre de la Empresa</label>
+                {{ convenio_form.nombre }}
+                {% if convenio_form.nombre.errors %}
+                <ul class="field-errors">{% for error in convenio_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ convenio_form.nit.id_for_label }}">NIT</label>
+                {{ convenio_form.nit }}
+                {% if convenio_form.nit.errors %}
+                <ul class="field-errors">{% for error in convenio_form.nit.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ convenio_form.telefono.id_for_label }}">Teléfono</label>
+                {{ convenio_form.telefono }}
+                {% if convenio_form.telefono.errors %}
+                <ul class="field-errors">{% for error in convenio_form.telefono.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ convenio_form.especialidad.id_for_label }}">Especialidad / Servicio</label>
+                {{ convenio_form.especialidad }}
+                {% if convenio_form.especialidad.errors %}
+                <ul class="field-errors">{% for error in convenio_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
             <div class="form-full"><button type="submit" class="btn btn-primary">Guardar Convenio</button></div>
         </form>
     </div>
@@ -101,8 +259,11 @@
             <table>
                 <thead><tr><th>Empresa</th><th>NIT</th><th>Teléfono</th><th>Especialidad</th></tr></thead>
                 <tbody>
-                    <tr><td>Sanitas EPS</td><td>800.123.456-1</td><td>6017001122</td><td>General</td></tr>
-                    <tr><td>Compensar</td><td>860.043.129-2</td><td>6015556677</td><td>Pediatría</td></tr>
+                    {% for c in convenios %}
+                    <tr><td>{{ c.nombre }}</td><td>{{ c.nit }}</td><td>{{ c.telefono }}</td><td>{{ c.especialidad }}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="4">Todavía no hay convenios registrados.</td></tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -119,5 +280,10 @@ function showSection(id, el) {
     if (el) el.classList.add('active');
     return false;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const seccion = '{{ seccion_activa|default:"resumen" }}';
+    showSection(seccion, document.getElementById('nav-' + seccion));
+});
 </script>
 {% endblock %}

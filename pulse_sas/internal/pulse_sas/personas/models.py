@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Pais(models.Model):
@@ -59,6 +60,9 @@ class Rol(models.Model):
         CLIENTE_PACIENTE = 'cliente_paciente', 'Cliente / paciente'
         EMPRESA = 'empresa', 'Empresa'
         ADMINISTRATIVO = 'administrativo', 'Administrativo'
+        MEDICO = 'medico', 'Médico'
+        ENFERMERA = 'enfermera', 'Enfermera'
+        GUARDIA = 'guardia', 'Guardia de seguridad'
 
     nombre = models.CharField(max_length=50, unique=True)
     categoria = models.CharField(max_length=20, choices=Categoria.choices)
@@ -88,7 +92,7 @@ class Persona(models.Model):
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     cedula = models.CharField(max_length=20, unique=True)
-    edad = models.PositiveSmallIntegerField()
+    fecha_nacimiento = models.DateField()
     sexo = models.CharField(max_length=1, choices=Sexo.choices, blank=True)
     direccion = models.CharField(max_length=255, blank=True)
     pais_nacimiento = models.ForeignKey(
@@ -98,15 +102,38 @@ class Persona(models.Model):
         Ciudad, on_delete=models.SET_NULL, null=True, blank=True, related_name='personas_nacidas'
     )
     telefono_personal = models.CharField(max_length=20, blank=True)
-    telefono_acompanante = models.CharField('teléfono acompañante', max_length=20, blank=True)
-    correo = models.EmailField()
+    telefono_personal_pais = models.ForeignKey(
+        Pais, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='telefonos_personales', verbose_name='país del teléfono personal',
+    )
+    telefono_familiar1 = models.CharField('teléfono familiar 1', max_length=20, blank=True)
+    telefono_familiar1_pais = models.ForeignKey(
+        Pais, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='telefonos_familiar1', verbose_name='país del teléfono familiar 1',
+    )
+    telefono_familiar2 = models.CharField('teléfono familiar 2', max_length=20, blank=True)
+    telefono_familiar2_pais = models.ForeignKey(
+        Pais, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='telefonos_familiar2', verbose_name='país del teléfono familiar 2',
+    )
+    correo = models.EmailField('correo electrónico personal')
+    correo_recuperacion = models.EmailField('correo de recuperación', blank=True)
     eps_ips = models.CharField('EPS / IPS', max_length=150, blank=True)
+    pais_residencia = models.ForeignKey(
+        Pais, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='personas_residentes', verbose_name='país de residencia',
+    )
     ciudad_residencia = models.ForeignKey(
         'Ciudad', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='residentes', verbose_name='ciudad de residencia',
     )
     roles = models.ManyToManyField(Rol, through='RolPersona', related_name='personas')
     tipos_sangre = models.ManyToManyField(TipoSangre, through='TipoSangrePersona', related_name='personas')
+    especialidad = models.CharField(
+        'especialidad médica', max_length=150, blank=True,
+        help_text='Solo aplica a personas con rol médico.',
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'persona'
@@ -115,6 +142,14 @@ class Persona(models.Model):
 
     def __str__(self):
         return f'{self.nombre} {self.apellido}'
+
+    @property
+    def edad_actual(self):
+        hoy = timezone.localdate()
+        anios = hoy.year - self.fecha_nacimiento.year
+        if (hoy.month, hoy.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day):
+            anios -= 1
+        return anios
 
 
 class RolPersona(models.Model):
@@ -374,3 +409,43 @@ class ContactoEmergencia(models.Model):
 
     def __str__(self):
         return f'{self.nombre_completo} ({self.parentesco}) → {self.paciente}'
+
+
+class Jornada(models.Model):
+    class TipoJornada(models.TextChoices):
+        MANANA = 'manana', 'Mañana'
+        TARDE = 'tarde', 'Tarde'
+        NOCHE = 'noche', 'Noche'
+
+    persona = models.ForeignKey(
+        Persona, on_delete=models.CASCADE, related_name='jornadas',
+        verbose_name='persona',
+    )
+    fecha = models.DateField()
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    tipo_jornada = models.CharField(max_length=10, choices=TipoJornada.choices)
+
+    class Meta:
+        verbose_name = 'jornada'
+        verbose_name_plural = 'jornadas'
+        ordering = ['-fecha', 'hora_inicio']
+
+    def __str__(self):
+        return f'{self.persona} - {self.fecha} ({self.get_tipo_jornada_display()})'
+
+
+class Convenio(models.Model):
+    nombre = models.CharField(max_length=150, verbose_name="Nombre de la Empresa")
+    nit = models.CharField(max_length=50, verbose_name="NIT")
+    telefono = models.CharField(max_length=50, verbose_name="Teléfono")
+    especialidad = models.CharField(max_length=150, verbose_name="Especialidad / Servicio")
+
+    class Meta:
+        db_table = 'convenio'
+        verbose_name = 'Convenio'
+        verbose_name_plural = 'Convenios'
+
+    def __str__(self):
+        return self.nombre
+
