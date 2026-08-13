@@ -194,6 +194,95 @@
 
     <!-- Tab Content: Usuarios -->
     <div id="subtab-usuarios" class="tab-panel">
+        {% if persona_editar %}
+        <div class="card">
+            <div class="card-title">Editar Usuario — {{ persona_editar.nombre }} {{ persona_editar.apellido }}</div>
+            <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios&editar={{ persona_editar.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="editar_usuario">
+                <input type="hidden" name="persona_id" value="{{ persona_editar.id }}">
+                <div class="form-group">
+                    <label for="{{ editar_form.nombre.id_for_label }}">Nombre</label>
+                    {{ editar_form.nombre }}
+                    {% if editar_form.nombre.errors %}
+                    <ul class="field-errors">{% for error in editar_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.apellido.id_for_label }}">Apellido</label>
+                    {{ editar_form.apellido }}
+                    {% if editar_form.apellido.errors %}
+                    <ul class="field-errors">{% for error in editar_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.cedula.id_for_label }}">Cédula / Documento</label>
+                    {{ editar_form.cedula }}
+                    {% if editar_form.cedula.errors %}
+                    <ul class="field-errors">{% for error in editar_form.cedula.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                    {{ editar_form.fecha_nacimiento }}
+                    {% if editar_form.fecha_nacimiento.errors %}
+                    <ul class="field-errors">{% for error in editar_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ editar_form.correo.id_for_label }}">Correo</label>
+                    {{ editar_form.correo }}
+                    {% if editar_form.correo.errors %}
+                    <ul class="field-errors">{% for error in editar_form.correo.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <label>Rol(es)</label>
+                    {{ editar_form.roles }}
+                    {% if editar_form.roles.errors %}
+                    <ul class="field-errors">{% for error in editar_form.roles.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full" style="display:flex;gap:10px;">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{% url 'dashboard_admin' %}?seccion=usuarios" class="btn btn-outline">Cancelar</a>
+                </div>
+            </form>
+        </div>
+
+        {% if password_form %}
+        <div class="card">
+            <div class="card-title">Cambiar Contraseña</div>
+            <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios&editar={{ persona_editar.id }}">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="cambiar_password">
+                <input type="hidden" name="persona_id" value="{{ persona_editar.id }}">
+                <div class="form-group">
+                    <label for="{{ password_form.new_password1.id_for_label }}">Nueva contraseña</label>
+                    {{ password_form.new_password1 }}
+                    {% if password_form.new_password1.errors %}
+                    <ul class="field-errors">{% for error in password_form.new_password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ password_form.new_password2.id_for_label }}">Confirmar nueva contraseña</label>
+                    {{ password_form.new_password2 }}
+                    {% if password_form.new_password2.errors %}
+                    <ul class="field-errors">{% for error in password_form.new_password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-full">
+                    <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-title">Cambiar Contraseña</div>
+            <p>Este registro no tiene una cuenta de acceso asociada, no se puede cambiar contraseña.</p>
+        </div>
+        {% endif %}
+        {% else %}
         <div class="card">
             <div class="card-title">Nuevo Usuario</div>
             <form class="form-grid" method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios">
@@ -221,10 +310,10 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    <label for="{{ usuario_form.edad.id_for_label }}">Edad</label>
-                    {{ usuario_form.edad }}
-                    {% if usuario_form.edad.errors %}
-                    <ul class="field-errors">{% for error in usuario_form.edad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    <label for="{{ usuario_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                    {{ usuario_form.fecha_nacimiento }}
+                    {% if usuario_form.fecha_nacimiento.errors %}
+                    <ul class="field-errors">{% for error in usuario_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -267,13 +356,14 @@
                 </div>
             </form>
         </div>
+        {% endif %}
 
         <div class="card">
             <div class="card-title">Usuarios registrados</div>
             <div class="table-wrap">
                 <table>
                     <thead>
-                        <tr><th>Nombre</th><th>Cédula</th><th>Usuario</th><th>Correo</th><th>Rol(es)</th><th>Registrado</th></tr>
+                        <tr><th>Nombre</th><th>Cédula</th><th>Usuario</th><th>Correo</th><th>Rol(es)</th><th>Estado</th><th>Registrado</th><th>Acciones</th></tr>
                     </thead>
                     <tbody>
                         {% for p in usuarios %}
@@ -289,10 +379,40 @@
                                 <span class="badge badge-gray">Sin rol</span>
                                 {% endfor %}
                             </td>
+                            <td>
+                                {% if p.usuario %}
+                                    {% if p.usuario.is_active %}
+                                    <span class="badge badge-success">Activo</span>
+                                    {% else %}
+                                    <span class="badge badge-gray">Inactivo</span>
+                                    {% endif %}
+                                {% else %}
+                                <span class="badge badge-gray">Sin cuenta</span>
+                                {% endif %}
+                            </td>
                             <td>{{ p.fecha_creacion|date:"Y-m-d H:i" }}</td>
+                            <td style="display:flex;gap:6px;">
+                                <a href="{% url 'dashboard_admin' %}?seccion=usuarios&editar={{ p.id }}" class="btn btn-outline btn-sm">Editar</a>
+                                {% if p.usuario and p.usuario_id != request.user.id %}
+                                <form method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios" {% if p.usuario.is_active %}onsubmit="return confirm('¿Desactivar a {{ p.nombre }} {{ p.apellido }}? No podrá iniciar sesión hasta reactivarlo.');"{% endif %}>
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="toggle_activo">
+                                    <input type="hidden" name="persona_id" value="{{ p.id }}">
+                                    <button type="submit" class="btn btn-outline btn-sm">{% if p.usuario.is_active %}Desactivar{% else %}Activar{% endif %}</button>
+                                </form>
+                                {% endif %}
+                                {% if p.usuario_id != request.user.id %}
+                                <form method="post" action="{% url 'dashboard_admin' %}?seccion=usuarios" onsubmit="return confirm('¿Eliminar a {{ p.nombre }} {{ p.apellido }}? Esta acción no se puede deshacer.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="eliminar_usuario">
+                                    <input type="hidden" name="persona_id" value="{{ p.id }}">
+                                    <button type="submit" class="btn btn-outline btn-sm" style="color:#dc3545;">Eliminar</button>
+                                </form>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6">Todavía no hay usuarios registrados.</td></tr>
+                        <tr><td colspan="8">Todavía no hay usuarios registrados.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>

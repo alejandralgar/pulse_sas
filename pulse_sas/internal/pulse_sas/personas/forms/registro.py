@@ -28,7 +28,7 @@ class _RegistroUsuarioBaseForm(forms.Form):
     nombre = forms.CharField(max_length=100)
     apellido = forms.CharField(max_length=100)
     cedula = forms.CharField(max_length=20)
-    edad = forms.IntegerField(min_value=0)
+    fecha_nacimiento = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     roles = forms.ModelMultipleChoiceField(
         queryset=Rol.objects.none(),
         widget=forms.CheckboxSelectMultiple,
@@ -51,6 +51,13 @@ class _RegistroUsuarioBaseForm(forms.Form):
             raise forms.ValidationError('Ya existe una persona registrada con esa cédula.')
         return cedula
 
+    def clean_fecha_nacimiento(self):
+        from django.utils import timezone
+        fecha = self.cleaned_data['fecha_nacimiento']
+        if fecha > timezone.localdate():
+            raise forms.ValidationError('La fecha de nacimiento no puede ser futura.')
+        return fecha
+
     def clean(self):
         cleaned = super().clean()
         password1 = cleaned.get('password1')
@@ -71,7 +78,7 @@ class _RegistroUsuarioBaseForm(forms.Form):
             nombre=self.cleaned_data['nombre'],
             apellido=self.cleaned_data['apellido'],
             cedula=self.cleaned_data['cedula'],
-            edad=self.cleaned_data['edad'],
+            fecha_nacimiento=self.cleaned_data['fecha_nacimiento'],
             correo=self.cleaned_data['email'],
         )
         persona.roles.set(self.cleaned_data['roles'])
@@ -106,7 +113,8 @@ class _EditarPersonaBaseForm(forms.ModelForm):
 
     class Meta:
         model = Persona
-        fields = ['nombre', 'apellido', 'cedula', 'edad', 'correo']
+        fields = ['nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'correo']
+        widgets = {'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
