@@ -1,12 +1,13 @@
 from django.db import models
 
-from pulse_sas.internal.pulse_sas.personas.models import Persona
+from pulse_sas.internal.pulse_sas.personas.models import HistoriaClinica, Persona
 
 
 class Cita(models.Model):
     class Estado(models.TextChoices):
         PENDIENTE = 'pendiente', 'Pendiente'
         CONFIRMADA = 'confirmada', 'Confirmada'
+        ATENDIDA = 'atendida', 'Atendida'
         CANCELADA = 'cancelada', 'Cancelada'
         REPROGRAMADA = 'reprogramada', 'Reprogramada'
 
@@ -23,6 +24,10 @@ class Cita(models.Model):
     medico = models.ForeignKey(
         Persona, on_delete=models.SET_NULL, null=True, blank=True,
         related_name='citas_como_medico',
+    )
+    historia_clinica = models.OneToOneField(
+        HistoriaClinica, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='cita',
     )
     fecha_hora = models.DateTimeField()
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)

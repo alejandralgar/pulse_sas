@@ -1,0 +1,43 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Historial de {{ paciente.nombre }} · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Médico</div>
+<nav>
+    <a href="{% url 'dashboard_medico' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Volver a la agenda
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<section class="section-content">
+    <div class="page-header">
+        <h1>Historial Clínico</h1>
+        <p>{{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Consultas registradas</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Fecha</th><th>Motivo</th><th>Diagnóstico</th><th>Acción</th></tr></thead>
+                <tbody>
+                    {% for historia in historias %}
+                    <tr>
+                        <td>{{ historia.fecha_ingreso_paciente|date:"Y-m-d H:i" }}</td>
+                        <td>{{ historia.motivo_consulta.descripcion|default:"—" }}</td>
+                        <td>{{ historia.diagnostico.diagnostico_confirmado|default:historia.diagnostico.impresion_diagnostica|default:"—" }}</td>
+                        <td><a href="{% url 'historia_detalle' historia.id %}" class="btn btn-outline btn-sm">Ver Historia</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4">Este paciente todavía no tiene consultas registradas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

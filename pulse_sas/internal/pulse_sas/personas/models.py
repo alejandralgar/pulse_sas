@@ -366,6 +366,41 @@ class PlanManejo(models.Model):
         return f'Plan de manejo - {self.historia_clinica}'
 
 
+class Receta(models.Model):
+    """Receta médica -- junto con `HistoriaClinica` forma lo que la
+    usuaria llama 'epicrisis'. Mismo médico, misma ventana de edición
+    (día de la consulta) que la historia clínica asociada."""
+
+    historia_clinica = models.OneToOneField(
+        HistoriaClinica, on_delete=models.CASCADE, related_name='receta'
+    )
+    indicaciones_generales = models.TextField(blank=True)
+    fecha_emision = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'receta médica'
+        verbose_name_plural = 'recetas médicas'
+
+    def __str__(self):
+        return f'Receta - {self.historia_clinica}'
+
+
+class ItemReceta(models.Model):
+    receta = models.ForeignKey(Receta, on_delete=models.CASCADE, related_name='medicamentos')
+    medicamento = models.CharField(max_length=150)
+    dosis = models.CharField(max_length=100, blank=True)
+    frecuencia = models.CharField(max_length=100, blank=True)
+    duracion = models.CharField(max_length=100, blank=True)
+    indicaciones = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        verbose_name = 'medicamento recetado'
+        verbose_name_plural = 'medicamentos recetados'
+
+    def __str__(self):
+        return f'{self.medicamento} - {self.receta}'
+
+
 class DatosAdministrativos(models.Model):
     historia_clinica = models.OneToOneField(
         HistoriaClinica, on_delete=models.CASCADE, related_name='datos_administrativos'

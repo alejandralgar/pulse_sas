@@ -1,0 +1,72 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Historia Clínica · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Médico</div>
+<nav>
+    <a href="{% url 'dashboard_medico' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Volver a la agenda
+    </a>
+    {% if paciente %}
+    <a href="{% url 'historia_paciente' paciente.id %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Todo el historial del paciente
+    </a>
+    {% endif %}
+</nav>
+{% endblock %}
+
+{% block main %}
+<section class="section-content">
+    <div class="page-header">
+        <h1>Historia Clínica</h1>
+        <p>
+            {{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})
+            -- Consulta del {{ historia.fecha_ingreso_paciente|date:"Y-m-d H:i" }}
+            {% if medico_tratante %} -- Atendido por {{ medico_tratante.nombre }} {{ medico_tratante.apellido }}{% endif %}
+        </p>
+    </div>
+
+    <div class="card" style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{% url 'ver_receta' historia.id %}" class="btn btn-outline">Ver receta médica</a>
+        {% if puede_editar %}
+        <a href="{% url 'editar_historia' historia.id %}" class="btn btn-primary">Editar historia clínica</a>
+        {% else %}
+        <span class="badge badge-gray" style="align-self:center;">
+            Edición bloqueada -- solo el mismo día de la consulta (o rol Gerente)
+        </span>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-title">Motivo de consulta</div>
+        <p>{{ historia.motivo_consulta.descripcion|default:"—" }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Examen físico</div>
+        <p>Presión arterial: {{ historia.examen_fisico.presion_arterial|default:"—" }}</p>
+        <p>Frecuencia cardíaca: {{ historia.examen_fisico.frecuencia_cardiaca|default:"—" }}{% if historia.examen_fisico.frecuencia_cardiaca %} lpm{% endif %}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Diagnóstico</div>
+        <p><strong>Impresión diagnóstica:</strong> {{ historia.diagnostico.impresion_diagnostica|default:"—" }}</p>
+        <p><strong>Diagnóstico confirmado:</strong> {{ historia.diagnostico.diagnostico_confirmado|default:"—" }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Tratamiento</div>
+        <p>{{ historia.tratamiento }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Plan de manejo</div>
+        <p><strong>Tratamiento indicado:</strong> {{ historia.plan_de_manejo.tratamiento_indicado|default:"—" }}</p>
+        <p><strong>Recomendaciones:</strong> {{ historia.plan_de_manejo.recomendaciones|default:"—" }}</p>
+        <p><strong>Próxima cita:</strong> {{ historia.plan_de_manejo.fecha_proxima_cita|default:"—" }}</p>
+    </div>
+</section>
+{% endblock %}
