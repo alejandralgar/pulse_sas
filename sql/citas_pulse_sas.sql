@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fDvAYUmiDVvvVFVkVpGVfmA7iYBdQhegTMFEUMsM3SQVk5KKJKIS6ywcLWcVdDw
+\restrict 69NYUmzLe7HDSIwzyh1knApU1aGPGKH9N1COxR9mOYIir9XGjELsgZwE6eOrwaS
 
 -- Dumped from database version 18.0
 -- Dumped by pg_dump version 18.0
@@ -802,7 +802,7 @@ CREATE TABLE public.personas_persona (
     apellido character varying(100) NOT NULL,
     cedula character varying(20) NOT NULL,
     telefono_personal character varying(20) NOT NULL,
-    telefono_acompanante character varying(20) NOT NULL,
+    telefono_familiar1 character varying(20) CONSTRAINT personas_persona_telefono_acompanante_not_null NOT NULL,
     correo character varying(254) NOT NULL,
     ciudad_nacimiento_id bigint,
     pais_nacimiento_id bigint,
@@ -812,7 +812,14 @@ CREATE TABLE public.personas_persona (
     fecha_creacion timestamp with time zone NOT NULL,
     eps_ips character varying(150) NOT NULL,
     ciudad_residencia_id bigint,
-    fecha_nacimiento date NOT NULL
+    fecha_nacimiento date NOT NULL,
+    telefono_familiar2 character varying(20) NOT NULL,
+    telefono_personal_pais_id bigint,
+    telefono_familiar1_pais_id bigint,
+    telefono_familiar2_pais_id bigint,
+    correo_recuperacion character varying(254) NOT NULL,
+    pais_residencia_id bigint,
+    especialidad character varying(150) NOT NULL
 );
 
 
@@ -1117,7 +1124,7 @@ COPY public.auth_user (id, password, last_login, is_superuser, username, first_n
 2	pbkdf2_sha256$1200000$M0oQMFctpQ3p4dKxDv6uOo$tbpO2NV5ynHPeAZLrMy3U0WZ6FewrP8vwHZbrygIqVs=	2026-07-27 11:49:21.842293-05	f	Anamaria			lopezgaranamaria@gmail.com	f	t	2026-07-27 11:44:13.598249-05
 1	pbkdf2_sha256$1200000$76YtjGSC6XPjAFOPt66Qcc$UAys/9FiaDTfh76ACb6EHUB4pyZmdaEUpmnF2JdI59I=	2026-08-12 19:22:51.16855-05	t	admin			admin@pulsesas.local	t	t	2026-07-27 10:51:51.691115-05
 8	pbkdf2_sha256$1200000$r7eIOiFKqIa5zx323Sb6zi$nrD96KjKV/DEFy0wvC3atdfzz9ZHzIl0d5X8iTwBnRs=	2026-08-12 19:26:06.814128-05	f	anamaria			lopezgaranamaria@gmail.com	f	t	2026-07-29 08:45:44.777722-05
-31	pbkdf2_sha256$1200000$VoDZwKrcTgOztBKAau2ghV$nKAWsOb9XggGjXahvOhN+vbdFoKq5nw2gpqlP/u8qDI=	\N	f	lina			lina@gmail.com	f	t	2026-08-12 19:28:22.548453-05
+31	pbkdf2_sha256$1200000$VoDZwKrcTgOztBKAau2ghV$nKAWsOb9XggGjXahvOhN+vbdFoKq5nw2gpqlP/u8qDI=	2026-08-12 21:48:45.999084-05	f	lina			lina@gmail.com	f	t	2026-08-12 19:28:22.548453-05
 \.
 
 
@@ -1244,6 +1251,8 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 30	personas	0007_rol_guardia_jornada	2026-08-10 12:26:12.808708-05
 31	personas	0008_convenio_persona_fecha_creacion	2026-08-12 18:28:44.999202-05
 32	personas	0009_persona_fecha_nacimiento	2026-08-12 19:38:37.194674-05
+33	personas	0010_persona_telefonos_pais_correo_recuperacion	2026-08-12 20:00:31.54589-05
+34	personas	0011_persona_especialidad	2026-08-12 22:19:38.761423-05
 \.
 
 
@@ -1282,8 +1291,14 @@ b8hdoi528erfvo9n8dg6ir7my786rrc2	.eJxVjcsKwjAQRf9l1hLyamq6VPwE12GSTmgxRuk0K_HfpV
 qg5mi9r1612pnw0gi30lghiffvbe8f23	.eJxVjUEOgjAQRe_StWkKpUBZajyC62ZmOg3EgoahK-PdDQmJun3_5f2XClC2MRThNUxRDap26vQLEejOy748SxYOAqKnZeN1gay_CIgeZdlEH77om-zOzNcZpnzhWDKcj9bfwQgyqkF5wzFRilw3YLyjuqnQ-t5bBmw9W4PJIXVs2fTJRIxElY2MHbHjqkX1_gBpfEaq:1wuIsx:wSkcpGr2oDqflDXEfgOX-1bmkzcJAyu1WesbfmMSLOI	2026-08-26 19:01:27.701756-05
 w0gbgyc51rmeohz4nz3i1ni1w6rtn0ld	.eJxVjUEKwjAQRe-StYQ2SZu0S8UjuA7TyYQW0yidZCXeXQoFdfv-4_2X8FDL7CvT5pcgRqGsOP3CCfBOeV-eNTF5BpZLLrRlSPKLAPFRc2F5-CxvvDsrXVdY0oVCTXA-Wn8HM_AsRuEwtNA3DmGKZnDWIpLqGtQBQkSHricyndNND6aNgzZhslYbM0RQCkCL9wdcJ0WW:1wuJ7k:RijkxBsowrVcCNqV2iPDG8mv_1llfmEpBKoF2uJ67z8	2026-08-26 19:16:44.740989-05
 7nrotozjy6ppztrbtha4pyhx4qqjx39c	.eJxVjcsKwjAQRf8lawmdvNp0qfgJrsMkmdBiGqVpVuK_S6Ggbs89nPtiDts2uVZpdXNkI5MdO_1Cj-FOZV-eLVdyFSufy0Zrwcy_CEN4tLJVfviV3-ruLHRdcM4Xii3j-Wj9HUxYJzayQQ4-2SA8xORlUEA99AI6Y6yFZDQoClqKSIBCadQSBmXBWINShj4k9v4AI4hEPQ:1wuJDY:yMV-dk-YNk2DGhIZM6cvEro95F8VCoMe-OSk__sxaho	2026-08-26 19:22:44.314095-05
-g38rbw7luv7fqmtcwdqknnsv0ccg8u80	.eJxVjUEKwjAQRe8yaymtmaTapeIRXIdpMqHBNJVO4ka8uyiCun3_8f4dLNUy2Sq82uhhgB1sftlI7sL5NVxrErZC0sRceM2Umi8i55aaizQfX5qzvJyZTzPFdGRfEx0-rb-DiWSCAYwyulWkCAN2Hk0goxidG7cd7tEZHI0KyL3vleuCDmbUum07RT2y1xRgA-uSLLkSbwsMQH6OOUpZ6Q0eT7M6T9A:1wuJGo:3G3KoL6pQZ7K40Ru3D636k34OGuE3TuQMh5ervLdSys	2026-08-26 19:26:06.816236-05
 fjjkwv9e8l9kybufw68ghenyurrx3nfc	.eJxVjcsKwjAQRf8lawl5TpIuFT_BdZikAy2mUZpmJf67FArq9tzDuS8WsW9T7I3WOI9sYFqx0y9MmO9U9-XZS6PYsPG5brRWLPyLMOdHr1vjh9_4re3OQtcF53KhsRc8H62_gwnbxAYWktfCCSJJ3kupvE_gQBtvk85ZkDEIiawLBiyAhGClsKiAVAgOE7D3BwghQ5Y:1wuJV2:9ywvkDjC9DdpknuGEicIla4BwJcO9KYhTuQ7gnbavxg	2026-08-26 19:40:48.973599-05
+ihr1dj2xzpan9krdmjli5sranxyxmjjd	.eJxVjcsKwjAQRf8lawl5kTRdKn6C6zBJprSYRukkK_HfpVBQt-cezn2xAL3NoRNuYclsZNqw0y-MkO5Y9-XZC2EgIL7UhluFwr8IUnr02ogfPvEb7c6K1xWWcsHcC5yP1t_BDDSzkZk4KOOUBSNTVChcBpFQoI84yMnKKWqtISdlILoIxsvstQLlsrdWCcPeH0O5RRQ:1wuJsw:K3pS2b0MIvPvCbylmqxVd9-izWlKXPvLyW5fabb5i3M	2026-08-26 20:05:30.250927-05
+m7a610qdsp0cx6m91tsr1m91i6u54dcp	.eJxVjUEKwjAQRe-StQTNNJp0qXgE12E6M6HFtEqnWYl3l0JB3b7_eP9lEtalT1VlTgOb1oA3u1_YId1lWpdnLSpJUe0wLTJPWOwXIdGjTovazVd709UZ5TriUC7CteB5a_0d9Ki9aY3zEEMMLuOJHFMOQhBdQwxeOERPyBg6hqMcyDvK--iaiAE8AyJgNu8PS9NFzw:1wuL8H:wm6BA2Bk8TaPGCKAcQ5Nu7cH_LlgNe2tT55M4uMQbS8	2026-08-26 21:25:25.149206-05
+gu401m5owj2tym8l1edu22jxazux9yi7	.eJxVjcEOwiAQBf9lz02D0ALtUeMneCYLLCmRFlOKF-O_myZN1Ou8ybwXGKzbZGqh1UQPI4gTNL_QorvTsi-PmgqZgqWNy0brgqn9InQu12Ur7eGX9lZ2Z6brjDFdyNeE56P1dzBhmWAEK7qesYH6AaW2fei4ZV2QUihLLFiu-0FhYF4zGpAH65XkSoXAlWNaCAUNrDkZdFt8ZhhhJh9dhvcHZIJMPw:1wuLUs:TFfiH8_zzViucgI6mkOOH0zwuMrjOMTrAgYirSW5FdY	2026-08-26 21:48:46.001718-05
+7xvsckia7sc0aij6ck0g6e6w1senjcmw	.eJxVjUEOgjAURO_StWkoH2nLUuMRXJOh_QRirYZPV8a7GxISdfvm5c1L9Sjr1BfhpZ-j6hS16vALB4Qb5215liTcC0TPeeUlI-kvQgiPklfRuy_6Kptz58sdczpzLAmnvfV3MEEm1ammgY0IrhqrY2vZ1tR4qkfrwOyIDOBBpnURDsY7it5HN_BoYGgwIaj3BzNXRTY:1wuM4D:G_NRj2RrvPbfL9-vmiYo5ZWNeiyi4yekWOcLCmP_E6k	2026-08-26 22:25:17.843065-05
+1wp1tepn9gdlduhtf6e9x1ewu0mahmlm	.eJxVjcsKwjAQRf8lawlJWvPoUvETXIdpZkKLMUqnWYn_LoWCuj33cO5LRGjrFBvTEmcUg-icOPzCEdKN6rY8W2GKDCznutJSocgvgpQera4sd5_llTfnTpc7zOVM2Aqc9tbfwQQ8iUFYVOQ6VGjGgJR0ykpbHciobL01aFX2WnlwI0Fwx86plH3fQ0ghkEcj3h9CVUUR:1wuM4E:KAy7GhgG2bPqLoH0yGP-aA3e2JvxKyCtcW0Njkdbg3Y	2026-08-26 22:25:18.4653-05
+5v8q4p4d7cg2hg8f7x179g1ehe55qm35	.eJxVjUEKwjAQRe-StYQ2bZNJl4pHcB1mkgktplGaZiXeXQoFdfv-4_2XcFi3ydXCq5uDGEUH4vQLCf2d8748ayrsChY5543XjEl-EXr_qHkr8vCLvJXdWfi64JwuHGrC89H6O5iwTGIUbRNJd54Gjn0kIoSoWHsILVujVeOD1p0FtJZZGTMQgfHQslXcAygj3h9m7EWJ:1wuM4E:KvkdQWlLSzbRizcDpZre7vX8ksFfHmEM_JOFpGpojqY	2026-08-26 22:25:18.866075-05
+iepqfd2jdyj0hwhq7gxelspkjmnvxdnv	.eJxVjcsKwjAQRf8lawlN8-5S8RNch0kypcU0SqdZif8uhYK6Pfdw7osFaNsUGuEa5swGJj07_cII6Y51X56tEAYC4nPdcK1Q-BdBSo9WN-KHT_xGu7PgdYG5XDC3Auej9XcwAU1sYH2UFrwaEcCPygqfY7QdOAUapO5SdlkaFY3ohBS9VkaM0mmRjTImeWfZ-wM9pERE:1wuM4F:EbjPd3GIcRZDQ4tThfuBApOwTW5-_izW-Oc9wW9wBcA	2026-08-26 22:25:19.256243-05
 \.
 
 
@@ -1468,9 +1483,9 @@ COPY public.personas_paisciudad (id, ciudad_id, pais_id) FROM stdin;
 -- Data for Name: personas_persona; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.personas_persona (id, nombre, apellido, cedula, telefono_personal, telefono_acompanante, correo, ciudad_nacimiento_id, pais_nacimiento_id, usuario_id, direccion, sexo, fecha_creacion, eps_ips, ciudad_residencia_id, fecha_nacimiento) FROM stdin;
-29	Lina	Castañeda	1011			lina@gmail.com	\N	\N	31			2026-08-12 19:28:22.909434-05		\N	2000-08-12
-6	Anamaria	Lopez	1010			lopezgaranamaria@gmail.com	\N	\N	8			2026-07-29 09:20:20.588433-05		\N	2000-08-12
+COPY public.personas_persona (id, nombre, apellido, cedula, telefono_personal, telefono_familiar1, correo, ciudad_nacimiento_id, pais_nacimiento_id, usuario_id, direccion, sexo, fecha_creacion, eps_ips, ciudad_residencia_id, fecha_nacimiento, telefono_familiar2, telefono_personal_pais_id, telefono_familiar1_pais_id, telefono_familiar2_pais_id, correo_recuperacion, pais_residencia_id, especialidad) FROM stdin;
+29	Lina	Castañeda	1011			lina@gmail.com	\N	\N	31			2026-08-12 19:28:22.909434-05		\N	2000-08-12		\N	\N	\N		\N	
+6	Anamaria	Lopez	1010			lopezgaranamaria@gmail.com	\N	\N	8			2026-07-29 09:20:20.588433-05		\N	2000-08-12		\N	\N	\N		\N	
 \.
 
 
@@ -1565,7 +1580,7 @@ SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 1, false);
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.auth_user_id_seq', 33, true);
+SELECT pg_catalog.setval('public.auth_user_id_seq', 41, true);
 
 
 --
@@ -1579,7 +1594,7 @@ SELECT pg_catalog.setval('public.auth_user_user_permissions_id_seq', 1, false);
 -- Name: citas_cita_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.citas_cita_id_seq', 1, false);
+SELECT pg_catalog.setval('public.citas_cita_id_seq', 2, true);
 
 
 --
@@ -1614,7 +1629,7 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 29, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 32, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 34, true);
 
 
 --
@@ -1691,7 +1706,7 @@ SELECT pg_catalog.setval('public.personas_historiaenfermedadactual_id_seq', 1, f
 -- Name: personas_jornada_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.personas_jornada_id_seq', 1, false);
+SELECT pg_catalog.setval('public.personas_jornada_id_seq', 1, true);
 
 
 --
@@ -1719,7 +1734,7 @@ SELECT pg_catalog.setval('public.personas_paisciudad_id_seq', 228, true);
 -- Name: personas_persona_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.personas_persona_id_seq', 31, true);
+SELECT pg_catalog.setval('public.personas_persona_id_seq', 39, true);
 
 
 --
@@ -1740,7 +1755,7 @@ SELECT pg_catalog.setval('public.personas_rol_id_seq', 11, true);
 -- Name: personas_rolpersona_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.personas_rolpersona_id_seq', 26, true);
+SELECT pg_catalog.setval('public.personas_rolpersona_id_seq', 34, true);
 
 
 --
@@ -2452,6 +2467,34 @@ CREATE INDEX personas_persona_pais_nacimiento_id_7aec5c11 ON public.personas_per
 
 
 --
+-- Name: personas_persona_pais_residencia_id_b461b22b; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX personas_persona_pais_residencia_id_b461b22b ON public.personas_persona USING btree (pais_residencia_id);
+
+
+--
+-- Name: personas_persona_telefono_familiar1_pais_id_fce3b3af; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX personas_persona_telefono_familiar1_pais_id_fce3b3af ON public.personas_persona USING btree (telefono_familiar1_pais_id);
+
+
+--
+-- Name: personas_persona_telefono_familiar2_pais_id_ebc3cdab; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX personas_persona_telefono_familiar2_pais_id_ebc3cdab ON public.personas_persona USING btree (telefono_familiar2_pais_id);
+
+
+--
+-- Name: personas_persona_telefono_personal_pais_id_4dbaf704; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX personas_persona_telefono_personal_pais_id_4dbaf704 ON public.personas_persona USING btree (telefono_personal_pais_id);
+
+
+--
 -- Name: personas_rol_nombre_8a9c7745_like; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -2758,6 +2801,38 @@ ALTER TABLE ONLY public.personas_persona
 
 
 --
+-- Name: personas_persona personas_persona_pais_residencia_id_b461b22b_fk_personas_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.personas_persona
+    ADD CONSTRAINT personas_persona_pais_residencia_id_b461b22b_fk_personas_ FOREIGN KEY (pais_residencia_id) REFERENCES public.personas_pais(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: personas_persona personas_persona_telefono_familiar1_p_fce3b3af_fk_personas_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.personas_persona
+    ADD CONSTRAINT personas_persona_telefono_familiar1_p_fce3b3af_fk_personas_ FOREIGN KEY (telefono_familiar1_pais_id) REFERENCES public.personas_pais(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: personas_persona personas_persona_telefono_familiar2_p_ebc3cdab_fk_personas_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.personas_persona
+    ADD CONSTRAINT personas_persona_telefono_familiar2_p_ebc3cdab_fk_personas_ FOREIGN KEY (telefono_familiar2_pais_id) REFERENCES public.personas_pais(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: personas_persona personas_persona_telefono_personal_pa_4dbaf704_fk_personas_; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.personas_persona
+    ADD CONSTRAINT personas_persona_telefono_personal_pa_4dbaf704_fk_personas_ FOREIGN KEY (telefono_personal_pais_id) REFERENCES public.personas_pais(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: personas_persona personas_persona_usuario_id_757630d6_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -2809,5 +2884,5 @@ ALTER TABLE ONLY public.personas_tiposangrepersona
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fDvAYUmiDVvvVFVkVpGVfmA7iYBdQhegTMFEUMsM3SQVk5KKJKIS6ywcLWcVdDw
+\unrestrict 69NYUmzLe7HDSIwzyh1knApU1aGPGKH9N1COxR9mOYIir9XGjELsgZwE6eOrwaS
 

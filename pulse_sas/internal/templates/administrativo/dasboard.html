@@ -9,6 +9,13 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Resumen
     </a>
+    {% if es_recepcionista %}
+    <a href="#" id="nav-citas" class="{% if seccion_activa == 'citas' %}active{% endif %}" onclick="return showSection('citas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Citas pendientes
+        {% if citas_pendientes %}<span class="badge badge-warning" style="margin-left:auto;">{{ citas_pendientes|length }}</span>{% endif %}
+    </a>
+    {% endif %}
     <a href="#" id="nav-empleados" class="{% if seccion_activa == 'empleados' %}active{% endif %}" onclick="return showSection('empleados', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         Registrar Empleados
@@ -47,6 +54,57 @@
     </div>
     {% include "partials/calendario.html" %}
 </section>
+
+{% if es_recepcionista %}
+<section id="citas" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Citas pendientes</h1>
+        <p>Asigná médico a las citas que solicitaron los pacientes -- el sistema sugiere uno libre a esa hora.</p>
+    </div>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora</th><th>Asignar médico</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in citas_pendientes %}
+                    <tr>
+                        <td>{{ item.cita.persona.nombre }} {{ item.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ item.cita.persona.cedula }}</span></td>
+                        <td>{{ item.cita.get_tipo_cita_display|default:"—" }}</td>
+                        <td>{{ item.cita.motivo }}</td>
+                        <td>{{ item.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            {% if item.candidatos %}
+                            <form method="post" action="{% url 'dashboard_administrativo' %}?seccion=citas" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="asignar_medico">
+                                <input type="hidden" name="cita_id" value="{{ item.cita.id }}">
+                                <select name="medico_id">
+                                    {% for c in item.candidatos %}
+                                    <option value="{{ c.persona.id }}"
+                                        {% if item.sugerido.id == c.persona.id %}selected{% endif %}
+                                        {% if c.ocupado %}disabled{% endif %}>
+                                        {{ c.persona.nombre }} {{ c.persona.apellido }}{% if c.persona.especialidad %} ({{ c.persona.especialidad }}){% endif %}{% if c.ocupado %} -- ocupado a esa hora{% elif c.en_turno %} -- en turno{% else %} -- sin jornada registrada{% endif %}{% if item.sugerido.id == c.persona.id %} ★ sugerido{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
+                            </form>
+                            {% else %}
+                            <span class="badge badge-gray">No hay médicos registrados</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No hay citas pendientes por asignar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <section id="empleados" class="section-content" style="display:none;">
     <div class="page-header"><h1>Registrar Empleados</h1><p>Médicos, enfermeras, gerencia y más</p></div>
@@ -109,6 +167,13 @@
                 {{ empleado_form.password2 }}
                 {% if empleado_form.password2.errors %}
                 <ul class="field-errors">{% for error in empleado_form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.especialidad.id_for_label }}">Especialidad (solo médicos)</label>
+                {{ empleado_form.especialidad }}
+                {% if empleado_form.especialidad.errors %}
+                <ul class="field-errors">{% for error in empleado_form.especialidad.errors %}<li>{{ error }}</li>{% endfor %}</ul>
                 {% endif %}
             </div>
             <div class="form-full">

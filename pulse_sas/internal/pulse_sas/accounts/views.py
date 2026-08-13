@@ -33,6 +33,73 @@ def _usuario_tiene_rol(user, categoria):
     return Rol.objects.filter(categoria=categoria, personas__usuario=user).exists()
 
 
+def _tiene_rol_nombre(user, nombre_rol):
+    """Distingue sub-roles dentro de una misma categoría (ej. Recepcionista
+    vs. Gerente vs. Contadora, todos categoria=administrativo) por el
+    `Rol.nombre` exacto asignado en BD."""
+    if user.is_superuser:
+        return True
+    from pulse_sas.internal.pulse_sas.personas.models import Rol
+    return Rol.objects.filter(nombre=nombre_rol, personas__usuario=user).exists()
+
+
+def _sugerir_medico(cita):
+    """Para una `Cita` pendiente sin médico: arma la lista de médicos
+    candidatos (con si está ocupado a esa hora exacta y si tiene Jornada
+    cubriendo ese horario) y devuelve cuál conviene sugerir primero.
+
+    'Ocupado' es el único bloqueo duro (no se puede doble-agendar un
+    médico a la misma fecha_hora). 'En turno' (tiene Jornada) y
+    'coincide especialidad' son señales para elegir el sugerido, no
+    bloqueos -- si nadie tiene Jornada registrada esa hora, igual se
+    sugiere alguien libre en vez de dejar a la recepcionista sin opción."""
+    from pulse_sas.internal.pulse_sas.citas.models import Cita
+    from pulse_sas.internal.pulse_sas.personas.models import Jornada, Persona, Rol
+
+    medicos = Persona.objects.filter(roles__categoria=Rol.Categoria.MEDICO).distinct().order_by('nombre', 'apellido')
+    fecha_hora = cita.fecha_hora
+
+    ocupados_ids = set(
+        Cita.objects.filter(
+            medico__in=medicos, fecha_hora=fecha_hora,
+            estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+        ).values_list('medico_id', flat=True)
+    )
+    en_turno_ids = set(
+        Jornada.objects.filter(
+            persona__in=medicos, fecha=fecha_hora.date(),
+            hora_inicio__lte=fecha_hora.time(), hora_fin__gte=fecha_hora.time(),
+        ).values_list('persona_id', flat=True)
+    )
+
+    candidatos = []
+    for medico in medicos:
+        candidatos.append({
+            'persona': medico,
+            'ocupado': medico.id in ocupados_ids,
+            'en_turno': medico.id in en_turno_ids,
+            'coincide_especialidad': (
+                cita.tipo_cita != Cita.TipoCita.ESPECIALISTA or bool(medico.especialidad)
+            ),
+        })
+
+    disponibles = [c for c in candidatos if not c['ocupado']]
+    sugerido = None
+    for c in disponibles:
+        if c['en_turno'] and c['coincide_especialidad']:
+            sugerido = c['persona']
+            break
+    if sugerido is None:
+        for c in disponibles:
+            if c['coincide_especialidad']:
+                sugerido = c['persona']
+                break
+    if sugerido is None and disponibles:
+        sugerido = disponibles[0]['persona']
+
+    return candidatos, sugerido
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -215,12 +282,17 @@ def vista_admin(request):
 
 @login_required
 def vista_administrativo(request):
+    from django.shortcuts import get_object_or_404
+
+    from pulse_sas.internal.pulse_sas.citas.models import Cita
     from pulse_sas.internal.pulse_sas.personas.forms import ConvenioForm, EmpleadoRegistroForm
     from pulse_sas.internal.pulse_sas.personas.models import Convenio, Persona, Rol
 
     if not _usuario_tiene_rol(request.user, Rol.Categoria.ADMINISTRATIVO):
         messages.error(request, 'No tienes permisos de administrativo.')
         return redirect('dashboard')
+
+    es_recepcionista = _tiene_rol_nombre(request.user, 'recepcionista')
 
     convenio_form = ConvenioForm()
     empleado_form = EmpleadoRegistroForm()
@@ -242,27 +314,80 @@ def vista_administrativo(request):
                 messages.success(request, 'Empleado registrado correctamente.')
                 return redirect(reverse('dashboard_administrativo') + '?seccion=empleados')
 
+        elif accion == 'asignar_medico' and es_recepcionista:
+            cita = get_object_or_404(Cita, pk=request.POST.get('cita_id'), medico__isnull=True)
+            medico = Persona.objects.filter(
+                pk=request.POST.get('medico_id'), roles__categoria=Rol.Categoria.MEDICO
+            ).first()
+            if not medico:
+                messages.error(request, 'Selecciona un médico válido.')
+            elif Cita.objects.filter(
+                medico=medico, fecha_hora=cita.fecha_hora,
+                estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+            ).exists():
+                messages.error(
+                    request,
+                    f'{medico.nombre} {medico.apellido} ya tiene otra cita a esa hora exacta. '
+                    'Elige otro médico.'
+                )
+            else:
+                cita.medico = medico
+                cita.estado = Cita.Estado.CONFIRMADA
+                cita.save(update_fields=['medico', 'estado'])
+                messages.success(request, 'Cita asignada y confirmada correctamente.')
+                return redirect(reverse('dashboard_administrativo') + '?seccion=citas')
+
     categorias_empleado = [Rol.Categoria.ADMINISTRATIVO, Rol.Categoria.MEDICO, Rol.Categoria.ENFERMERA]
     empleados = Persona.objects.filter(
         roles__categoria__in=categorias_empleado
     ).prefetch_related('roles').distinct().order_by('-fecha_creacion')
+
+    citas_pendientes = []
+    if es_recepcionista:
+        pendientes = Cita.objects.filter(
+            estado=Cita.Estado.PENDIENTE, medico__isnull=True
+        ).select_related('persona').order_by('fecha_hora')
+        for c in pendientes:
+            candidatos, sugerido = _sugerir_medico(c)
+            citas_pendientes.append({'cita': c, 'candidatos': candidatos, 'sugerido': sugerido})
 
     ctx = {
         'convenio_form': convenio_form,
         'convenios': Convenio.objects.all().order_by('nombre'),
         'empleado_form': empleado_form,
         'empleados': empleados,
+        'es_recepcionista': es_recepcionista,
+        'citas_pendientes': citas_pendientes,
         'seccion_activa': request.GET.get('seccion', 'resumen'),
     }
     return render(request, ROLE_TEMPLATE_MAP['administrativo'], ctx)
 
 @login_required
 def vista_medico(request):
+    from django.utils import timezone
+
+    from pulse_sas.internal.pulse_sas.citas.models import Cita
     from pulse_sas.internal.pulse_sas.personas.models import Rol
+
     if not _usuario_tiene_rol(request.user, Rol.Categoria.MEDICO):
         messages.error(request, 'No tienes permisos de médico.')
         return redirect('dashboard')
-    return render(request, ROLE_TEMPLATE_MAP['medico'])
+
+    try:
+        persona_medico = request.user.persona
+    except Exception:
+        persona_medico = None
+
+    agenda_hoy = []
+    if persona_medico:
+        agenda_hoy = Cita.objects.filter(
+            medico=persona_medico,
+            fecha_hora__date=timezone.localdate(),
+            estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+        ).select_related('persona').order_by('fecha_hora')
+
+    ctx = {'agenda_hoy': agenda_hoy}
+    return render(request, ROLE_TEMPLATE_MAP['medico'], ctx)
 
 @login_required
 def vista_enfermera(request):

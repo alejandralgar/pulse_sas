@@ -1,0 +1,165 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Mi Perfil · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Cuenta</div>
+<nav>
+    <a href="{% url 'dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Volver al panel
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<section class="section-content">
+    <div class="page-header">
+        <h1>Mi Perfil</h1>
+        <p>Datos personales y acceso -- {{ persona.nombre }} {{ persona.apellido }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Cargo</div>
+        <div>
+            {% for rol in persona.roles.all %}
+            <span class="badge badge-info">{{ rol.get_categoria_display }}</span>
+            {% empty %}
+            <span class="badge badge-gray">Sin rol asignado</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Datos personales</div>
+        <form class="form-grid" method="post" action="{% url 'mi_perfil' %}">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="actualizar_perfil">
+
+            <div class="form-group">
+                <label for="{{ perfil_form.nombre.id_for_label }}">Nombre</label>
+                {{ perfil_form.nombre }}
+                {% if perfil_form.nombre.errors %}<ul class="field-errors">{% for error in perfil_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.apellido.id_for_label }}">Apellido</label>
+                {{ perfil_form.apellido }}
+                {% if perfil_form.apellido.errors %}<ul class="field-errors">{% for error in perfil_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.username.id_for_label }}">Usuario</label>
+                {{ perfil_form.username }}
+                {% if perfil_form.username.errors %}<ul class="field-errors">{% for error in perfil_form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.cedula.id_for_label }}">Cédula</label>
+                {{ perfil_form.cedula }}
+                {% if perfil_form.cedula.errors %}<ul class="field-errors">{% for error in perfil_form.cedula.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                {{ perfil_form.fecha_nacimiento }}
+                {% if perfil_form.fecha_nacimiento.errors %}<ul class="field-errors">{% for error in perfil_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label>Edad</label>
+                <div class="readonly-field">{{ persona.edad_actual }} años</div>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ perfil_form.correo.id_for_label }}">Correo electrónico personal</label>
+                {{ perfil_form.correo }}
+                {% if perfil_form.correo.errors %}<ul class="field-errors">{% for error in perfil_form.correo.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.correo_recuperacion.id_for_label }}">Correo de recuperación</label>
+                {{ perfil_form.correo_recuperacion }}
+                {% if perfil_form.correo_recuperacion.errors %}<ul class="field-errors">{% for error in perfil_form.correo_recuperacion.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ perfil_form.telefono_personal.id_for_label }}">Teléfono personal</label>
+                {{ perfil_form.telefono_personal }}
+                {% if perfil_form.telefono_personal.errors %}<ul class="field-errors">{% for error in perfil_form.telefono_personal.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.telefono_personal_pais.id_for_label }}">País del teléfono personal</label>
+                {{ perfil_form.telefono_personal_pais }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ perfil_form.telefono_familiar1.id_for_label }}">Teléfono familiar 1</label>
+                {{ perfil_form.telefono_familiar1 }}
+                {% if perfil_form.telefono_familiar1.errors %}<ul class="field-errors">{% for error in perfil_form.telefono_familiar1.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.telefono_familiar1_pais.id_for_label }}">País del teléfono familiar 1</label>
+                {{ perfil_form.telefono_familiar1_pais }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ perfil_form.telefono_familiar2.id_for_label }}">Teléfono familiar 2</label>
+                {{ perfil_form.telefono_familiar2 }}
+                {% if perfil_form.telefono_familiar2.errors %}<ul class="field-errors">{% for error in perfil_form.telefono_familiar2.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.telefono_familiar2_pais.id_for_label }}">País del teléfono familiar 2</label>
+                {{ perfil_form.telefono_familiar2_pais }}
+            </div>
+
+            <div class="form-group form-full">
+                <label for="{{ perfil_form.direccion.id_for_label }}">Dirección de residencia</label>
+                {{ perfil_form.direccion }}
+                {% if perfil_form.direccion.errors %}<ul class="field-errors">{% for error in perfil_form.direccion.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ perfil_form.pais_nacimiento.id_for_label }}">País de nacimiento</label>
+                {{ perfil_form.pais_nacimiento }}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.ciudad_nacimiento.id_for_label }}">Ciudad de nacimiento</label>
+                {{ perfil_form.ciudad_nacimiento }}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.pais_residencia.id_for_label }}">País de residencia</label>
+                {{ perfil_form.pais_residencia }}
+            </div>
+            <div class="form-group">
+                <label for="{{ perfil_form.ciudad_residencia.id_for_label }}">Ciudad de residencia</label>
+                {{ perfil_form.ciudad_residencia }}
+            </div>
+
+            <div class="form-full">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Cambiar Contraseña</div>
+        <form class="form-grid" method="post" action="{% url 'mi_perfil' %}">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="cambiar_password">
+            <div class="form-group">
+                <label for="{{ password_form.old_password.id_for_label }}">Contraseña actual</label>
+                {{ password_form.old_password }}
+                {% if password_form.old_password.errors %}<ul class="field-errors">{% for error in password_form.old_password.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ password_form.new_password1.id_for_label }}">Contraseña nueva</label>
+                {{ password_form.new_password1 }}
+                {% if password_form.new_password1.errors %}<ul class="field-errors">{% for error in password_form.new_password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ password_form.new_password2.id_for_label }}">Repita la contraseña nueva</label>
+                {{ password_form.new_password2 }}
+                {% if password_form.new_password2.errors %}<ul class="field-errors">{% for error in password_form.new_password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-full">
+                <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

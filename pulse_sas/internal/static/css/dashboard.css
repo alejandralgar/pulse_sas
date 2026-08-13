@@ -66,12 +66,19 @@ body.dashboard-body {
 }
 
 .topbar-user {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 0.9rem;
     color: var(--color-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.15s;
 }
+
+.topbar-user:hover { background: #f8fafc; }
 
 .topbar-avatar {
     width: 34px; height: 34px;
@@ -79,6 +86,87 @@ body.dashboard-body {
     background: linear-gradient(135deg, var(--color-bg-from), var(--color-bg-to));
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-weight: 700; font-size: 0.85rem;
+}
+
+.topbar-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 260px;
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    z-index: 200;
+    cursor: default;
+}
+
+.topbar-dropdown.open { display: block; }
+
+.dropdown-header {
+    text-align: center;
+    padding: 18px 16px 14px;
+}
+
+.dropdown-avatar {
+    width: 48px; height: 48px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--color-bg-from), var(--color-bg-to));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 1.1rem;
+}
+
+.dropdown-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.dropdown-role {
+    font-size: 0.78rem;
+    color: var(--color-muted);
+    margin-top: 2px;
+}
+
+.topbar-dropdown a,
+.topbar-dropdown button,
+.topbar-dropdown .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.topbar-dropdown a:hover,
+.topbar-dropdown button:hover { background: #f8fafc; }
+
+.topbar-dropdown .dropdown-item.disabled {
+    color: var(--color-muted);
+    cursor: default;
+}
+
+.dropdown-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+.dropdown-danger { color: var(--color-error); }
+
+.topbar-dropdown form { margin: 0; }
+
+.topbar-dropdown hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 0;
 }
 
 .btn-logout {

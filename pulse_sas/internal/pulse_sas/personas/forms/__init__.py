@@ -1,4 +1,4 @@
-from .perfil import ContactoEmergenciaForm, PerfilEditableForm
+from .perfil import ContactoEmergenciaForm, MiPerfilForm, PerfilEditableForm
 from .registro import (
     AdminEditarUsuarioForm,
     AdminRegistroUsuarioForm,
@@ -10,6 +10,7 @@ from .registro import (
 
 __all__ = [
     'ContactoEmergenciaForm',
+    'MiPerfilForm',
     'PerfilEditableForm',
     'AdminEditarUsuarioForm',
     'AdminRegistroUsuarioForm',

@@ -42,20 +42,27 @@
             </div>
             <div class="table-wrap">
                 <table id="table-agenda">
-                    <thead><tr><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th><th>Acción</th></tr></thead>
+                    <thead><tr><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th></tr></thead>
                     <tbody>
+                        {% for cita in agenda_hoy %}
                         <tr>
-                            <td>08:00 AM</td><td>María Rodríguez</td><td>52411223</td><td>Consulta general</td><td><span class="badge badge-success">Atendido</span></td>
-                            <td><button class="btn btn-outline btn-sm" onclick="return verDetalleAtendido('María Rodríguez', '52411223', '2026-08-05', '08:00 AM', 'O+', 'Sanitas EPS', true)">Ver</button></td>
+                            <td>{{ cita.fecha_hora|date:"h:i A" }}</td>
+                            <td>{{ cita.persona.nombre }} {{ cita.persona.apellido }}</td>
+                            <td>{{ cita.persona.cedula }}</td>
+                            <td>{{ cita.get_tipo_cita_display|default:cita.motivo }}</td>
+                            <td>
+                                {% if cita.estado == 'confirmada' %}
+                                <span class="badge badge-success">Confirmada</span>
+                                {% elif cita.estado == 'pendiente' %}
+                                <span class="badge badge-warning">Pendiente</span>
+                                {% else %}
+                                <span class="badge badge-gray">{{ cita.get_estado_display }}</span>
+                                {% endif %}
+                            </td>
                         </tr>
-                        <tr>
-                            <td>09:30 AM</td><td>Carlos López</td><td>80234567</td><td>Control</td><td><span class="badge badge-warning">En espera</span></td>
-                            <td><button class="btn btn-primary btn-sm" onclick="return atenderPaciente('Carlos López', '80234567', 'A+', 'Sura EPS')">Atender</button></td>
-                        </tr>
-                        <tr>
-                            <td>11:00 AM</td><td>Andrea Mora</td><td>1021345678</td><td>Urgencia</td><td><span class="badge badge-info">Pendiente</span></td>
-                            <td><button class="btn btn-outline btn-sm" onclick="return verDetalleAtendido('Andrea Mora', '1021345678', '2026-08-05', '11:00 AM', 'O-', 'Compensar EPS', true)">Ver</button></td>
-                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">No tenés citas asignadas para hoy.</td></tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

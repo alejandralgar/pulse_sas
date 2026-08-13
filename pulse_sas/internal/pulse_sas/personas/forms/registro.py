@@ -29,6 +29,10 @@ class _RegistroUsuarioBaseForm(forms.Form):
     apellido = forms.CharField(max_length=100)
     cedula = forms.CharField(max_length=20)
     fecha_nacimiento = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    especialidad = forms.CharField(
+        max_length=150, required=False, label='Especialidad (solo médicos)',
+        widget=forms.TextInput(attrs={'placeholder': 'Ej: Cardiología, Pediatría...'}),
+    )
     roles = forms.ModelMultipleChoiceField(
         queryset=Rol.objects.none(),
         widget=forms.CheckboxSelectMultiple,
@@ -80,6 +84,7 @@ class _RegistroUsuarioBaseForm(forms.Form):
             cedula=self.cleaned_data['cedula'],
             fecha_nacimiento=self.cleaned_data['fecha_nacimiento'],
             correo=self.cleaned_data['email'],
+            especialidad=self.cleaned_data['especialidad'],
         )
         persona.roles.set(self.cleaned_data['roles'])
         return user
@@ -113,8 +118,9 @@ class _EditarPersonaBaseForm(forms.ModelForm):
 
     class Meta:
         model = Persona
-        fields = ['nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'correo']
+        fields = ['nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'correo', 'especialidad']
         widgets = {'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'})}
+        labels = {'especialidad': 'Especialidad (solo médicos)'}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
