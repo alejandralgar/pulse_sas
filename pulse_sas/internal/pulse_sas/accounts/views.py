@@ -103,6 +103,11 @@ def _sugerir_medico(cita):
     return candidatos, sugerido
 
 
+def landing_view(request):
+    """Página de bienvenida y portal informativo público de Pulse SAS."""
+    return render(request, 'portal/landing.html')
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')

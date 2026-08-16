@@ -6,7 +6,7 @@ from pulse_sas.internal.pulse_sas.personas import views as personas_views
 from pulse_sas.internal.pulse_sas.citas import views as citas_views
 
 urlpatterns = [
-    path('',                    views.login_view,         name='home'),
+    path('',                    views.landing_view,       name='home'),
     path('login/',              views.login_view,         name='login'),
     path('logout/',             views.AccountsLogoutView.as_view(), name='logout'),
     path('dashboard/',          views.dashboard,          name='dashboard'),
