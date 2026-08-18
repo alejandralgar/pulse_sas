@@ -1,0 +1,86 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}{% if es_edicion %}Editar Historia Clínica{% else %}Atender Consulta{% endif %} · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Médico</div>
+<nav>
+    <a href="{% url 'dashboard_medico' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Volver a la agenda
+    </a>
+    {% if es_edicion %}
+    <a href="{% url 'historia_detalle' historia.id %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Ver historia clínica
+    </a>
+    {% endif %}
+</nav>
+{% endblock %}
+
+{% block main %}
+<section class="section-content">
+    <div class="page-header">
+        {% if es_edicion %}
+        <h1>Editar Historia Clínica</h1>
+        <p>Paciente: {{ paciente.nombre }} {{ paciente.apellido }} -- Consulta del {{ historia.fecha_ingreso_paciente|date:"Y-m-d" }}. Editable solo hoy.</p>
+        {% else %}
+        <h1>Atención Médica</h1>
+        <p>Consulta de {{ cita.persona.nombre }} {{ cita.persona.apellido }} (C.C. {{ cita.persona.cedula }}) -- {{ cita.fecha_hora|date:"Y-m-d H:i" }}</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-title">Registro de Consulta</div>
+        <form class="form-grid" method="post">
+            {% csrf_token %}
+            <div class="form-group form-full">
+                <label for="{{ form.motivo_consulta.id_for_label }}">Motivo de consulta</label>
+                {{ form.motivo_consulta }}
+                {% if form.motivo_consulta.errors %}<ul class="field-errors">{% for error in form.motivo_consulta.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.presion_arterial.id_for_label }}">Presión arterial</label>
+                {{ form.presion_arterial }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.frecuencia_cardiaca.id_for_label }}">Frecuencia cardíaca (lpm)</label>
+                {{ form.frecuencia_cardiaca }}
+            </div>
+
+            <div class="form-group form-full">
+                <label for="{{ form.impresion_diagnostica.id_for_label }}">Impresión diagnóstica</label>
+                {{ form.impresion_diagnostica }}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.diagnostico_confirmado.id_for_label }}">Diagnóstico confirmado</label>
+                {{ form.diagnostico_confirmado }}
+            </div>
+
+            <div class="form-group form-full">
+                <label for="{{ form.tratamiento.id_for_label }}">Tratamiento (resumen)</label>
+                {{ form.tratamiento }}
+                {% if form.tratamiento.errors %}<ul class="field-errors">{% for error in form.tratamiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.tratamiento_indicado.id_for_label }}">Tratamiento indicado (plan de manejo)</label>
+                {{ form.tratamiento_indicado }}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.recomendaciones.id_for_label }}">Recomendaciones</label>
+                {{ form.recomendaciones }}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.fecha_proxima_cita.id_for_label }}">Fecha próxima cita (si aplica)</label>
+                {{ form.fecha_proxima_cita }}
+            </div>
+
+            <div class="form-full" style="display:flex;gap:10px;">
+                <button type="submit" class="btn btn-primary">{% if es_edicion %}Guardar Cambios{% else %}Guardar Consulta{% endif %}</button>
+                <a href="{% url 'dashboard_medico' %}" class="btn btn-outline">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

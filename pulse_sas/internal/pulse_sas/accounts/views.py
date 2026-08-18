@@ -53,11 +53,14 @@ def _sugerir_medico(cita):
     'coincide especialidad' son señales para elegir el sugerido, no
     bloqueos -- si nadie tiene Jornada registrada esa hora, igual se
     sugiere alguien libre en vez de dejar a la recepcionista sin opción."""
+    from django.utils import timezone as tz
+
     from pulse_sas.internal.pulse_sas.citas.models import Cita
     from pulse_sas.internal.pulse_sas.personas.models import Jornada, Persona, Rol
 
     medicos = Persona.objects.filter(roles__categoria=Rol.Categoria.MEDICO).distinct().order_by('nombre', 'apellido')
     fecha_hora = cita.fecha_hora
+    fecha_hora_local = tz.localtime(fecha_hora) if tz.is_aware(fecha_hora) else fecha_hora
 
     ocupados_ids = set(
         Cita.objects.filter(
@@ -67,8 +70,8 @@ def _sugerir_medico(cita):
     )
     en_turno_ids = set(
         Jornada.objects.filter(
-            persona__in=medicos, fecha=fecha_hora.date(),
-            hora_inicio__lte=fecha_hora.time(), hora_fin__gte=fecha_hora.time(),
+            persona__in=medicos, fecha=fecha_hora_local.date(),
+            hora_inicio__lte=fecha_hora_local.time(), hora_fin__gte=fecha_hora_local.time(),
         ).values_list('persona_id', flat=True)
     )
 
@@ -98,6 +101,11 @@ def _sugerir_medico(cita):
         sugerido = disponibles[0]['persona']
 
     return candidatos, sugerido
+
+
+def landing_view(request):
+    """Página de bienvenida y portal informativo público de Pulse SAS."""
+    return render(request, 'portal/landing.html')
 
 
 def login_view(request):
@@ -367,7 +375,7 @@ def vista_medico(request):
     from django.utils import timezone
 
     from pulse_sas.internal.pulse_sas.citas.models import Cita
-    from pulse_sas.internal.pulse_sas.personas.models import Rol
+    from pulse_sas.internal.pulse_sas.personas.models import HistoriaClinicaPersona, Persona, Rol
 
     if not _usuario_tiene_rol(request.user, Rol.Categoria.MEDICO):
         messages.error(request, 'No tienes permisos de médico.')
@@ -379,14 +387,23 @@ def vista_medico(request):
         persona_medico = None
 
     agenda_hoy = []
+    pacientes_atendidos = []
     if persona_medico:
         agenda_hoy = Cita.objects.filter(
             medico=persona_medico,
             fecha_hora__date=timezone.localdate(),
-            estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+            estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA, Cita.Estado.ATENDIDA],
         ).select_related('persona').order_by('fecha_hora')
 
-    ctx = {'agenda_hoy': agenda_hoy}
+        pacientes_atendidos = Persona.objects.filter(
+            historiaclinicapersona__rol_en_historia=HistoriaClinicaPersona.RolEnHistoria.PACIENTE,
+            historiaclinicapersona__historia_clinica__in=HistoriaClinicaPersona.objects.filter(
+                persona=persona_medico,
+                rol_en_historia=HistoriaClinicaPersona.RolEnHistoria.MEDICO_TRATANTE,
+            ).values_list('historia_clinica_id', flat=True),
+        ).distinct().order_by('nombre', 'apellido')
+
+    ctx = {'agenda_hoy': agenda_hoy, 'pacientes_atendidos': pacientes_atendidos}
     return render(request, ROLE_TEMPLATE_MAP['medico'], ctx)
 
 @login_required

@@ -42,7 +42,7 @@
             </div>
             <div class="table-wrap">
                 <table id="table-agenda">
-                    <thead><tr><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th></tr></thead>
+                    <thead><tr><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th><th>Acción</th></tr></thead>
                     <tbody>
                         {% for cita in agenda_hoy %}
                         <tr>
@@ -55,13 +55,24 @@
                                 <span class="badge badge-success">Confirmada</span>
                                 {% elif cita.estado == 'pendiente' %}
                                 <span class="badge badge-warning">Pendiente</span>
+                                {% elif cita.estado == 'atendida' %}
+                                <span class="badge badge-info">Atendida</span>
                                 {% else %}
                                 <span class="badge badge-gray">{{ cita.get_estado_display }}</span>
                                 {% endif %}
                             </td>
+                            <td>
+                                {% if cita.estado == 'confirmada' %}
+                                <a href="{% url 'atender_cita' cita.id %}" class="btn btn-primary btn-sm">Atender</a>
+                                {% elif cita.estado == 'atendida' and cita.historia_clinica_id %}
+                                <a href="{% url 'historia_detalle' cita.historia_clinica_id %}" class="btn btn-outline btn-sm">Ver Historia</a>
+                                {% else %}
+                                —
+                                {% endif %}
+                            </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="5">No tenés citas asignadas para hoy.</td></tr>
+                        <tr><td colspan="6">No tenés citas asignadas para hoy.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -75,20 +86,23 @@
         <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
                 <div class="card-title" style="margin:0;">Historial Clínico</div>
-                <input type="text" id="search-historia" placeholder="Buscar en historial por nombre o cédula..." onkeyup="filterTable('search-historia', 'table-historia')" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:260px;">
+                <input type="text" id="search-historia" placeholder="Buscar por nombre o cédula..." onkeyup="filterTable('search-historia', 'table-historia')" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:260px;">
             </div>
+            <p style="color:var(--color-muted);margin-bottom:12px;">Pacientes que atendiste alguna vez. Hacé clic en "Info" para ver todas sus consultas.</p>
             <div class="table-wrap">
                 <table id="table-historia">
-                    <thead><tr><th>Fecha</th><th>Paciente</th><th>Cédula</th><th>Diagnóstico</th><th>Médico</th><th>Acción</th></tr></thead>
+                    <thead><tr><th>Paciente</th><th>Cédula</th><th>Correo</th><th>Acción</th></tr></thead>
                     <tbody>
+                        {% for paciente in pacientes_atendidos %}
                         <tr>
-                            <td>2026-08-05 (Hoy)</td><td>María Rodríguez</td><td>52411223</td><td>Control general</td><td>Dr. Gómez</td>
-                            <td><button class="btn btn-outline btn-sm" onclick="verHistoriaRestringida('María Rodríguez', '52411223', '2026-08-05', true, 'Control general', 'Evolución favorable. Mantener tratamiento.')">Ver Historia</button></td>
+                            <td>{{ paciente.nombre }} {{ paciente.apellido }}</td>
+                            <td>{{ paciente.cedula }}</td>
+                            <td>{{ paciente.correo }}</td>
+                            <td><a href="{% url 'historia_paciente' paciente.id %}" class="btn btn-outline btn-sm">Info</a></td>
                         </tr>
-                        <tr>
-                            <td>2026-07-15</td><td>María Rodríguez</td><td>52411223</td><td>Hipertensión leve</td><td>Dr. Gómez</td>
-                            <td><button class="btn btn-outline btn-sm" onclick="verHistoriaRestringida('María Rodríguez', '52411223', '2026-07-15', false, 'Hipertensión leve', 'Se prescribe Enalapril 10mg cada 12 horas.')">Ver Historia</button></td>
-                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4">Todavía no atendiste a ningún paciente.</td></tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -98,136 +112,15 @@
     <!-- PESTAÑA 3 -->
     <div id="tab-buscar" class="inner-tab-content" style="display:none;">
         <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
-                <div class="card-title" style="margin:0;">Directorio de Pacientes</div>
-                <input type="text" id="search-buscar" placeholder="Buscar por paciente o cédula..." onkeyup="filterTable('search-buscar', 'table-buscar')" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:260px;">
-            </div>
-            <div class="table-wrap">
-                <table id="table-buscar">
-                    <thead><tr><th>Paciente</th><th>Cédula</th><th>EPS / IPS</th><th>Estado Asignación</th><th>Acción</th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td>Carlos López</td><td>80234567</td><td>Sura EPS</td><td><span class="badge badge-warning">Asignado (En espera)</span></td>
-                            <td><button class="btn btn-primary btn-sm" onclick="return atenderPaciente('Carlos López', '80234567', 'A+', 'Sura EPS')">Atender</button></td>
-                        </tr>
-                        <tr>
-                            <td>María Rodríguez</td><td>52411223</td><td>Sanitas EPS</td><td><span class="badge badge-success">Asignado (Atendido)</span></td>
-                            <td><button class="btn btn-outline btn-sm" onclick="return verDetalleAtendido('María Rodríguez', '52411223', '2026-08-05', '08:00 AM', 'O+', 'Sanitas EPS', true)">Ver</button></td>
-                        </tr>
-                        <tr>
-                            <td>Laura Gómez</td><td>1032456789</td><td>Compensar EPS</td><td><span class="badge badge-secondary">No asignado</span></td>
-                            <td><button class="btn btn-outline btn-sm" onclick="solicitarAtencion('Laura Gómez')">Solicitar atenderlo</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div class="card-title">Directorio de Pacientes</div>
+            <p style="color:var(--color-muted);">Función en desarrollo.</p>
         </div>
-    </div>
-</section>
-
-<!-- DETALLE PACIENTE ATENDIDO -->
-<section id="detalle-atendido" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Información del Paciente Atendido</h1>
-        <p>Detalle de atención registrada en la clínica con fecha y hora</p>
-    </div>
-    <div class="card">
-        <div class="card-title">Resumen de Cita y Clínica</div>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Fecha y Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Sangre</th><th>EPS / IPS</th><th>Estado</th></tr></thead>
-                <tbody>
-                    <tr>
-                        <td id="det-fechahora">2026-08-05 08:00 AM</td><td id="det-nombre">María Rodríguez</td>
-                        <td id="det-cedula">52411223</td><td id="det-sangre">O+</td><td id="det-eps">Sanitas EPS</td>
-                        <td><span class="badge badge-success">Atendido</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top:20px;display:flex;gap:10px;">
-            <button class="btn btn-primary" onclick="verHistoriaDePacienteActual()">Ver la Historia Clínica</button>
-            <button class="btn btn-outline" onclick="showMainSection('agenda-container', null)">Volver a la Agenda</button>
-        </div>
-    </div>
-</section>
-
-<!-- HISTORIA CLÍNICA RESTRINGIDA / EDITABLE -->
-<section id="historia-restringida" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Historia Clínica del Día</h1>
-        <p>Registro médico de <span id="hc-header-subtitle">María Rodríguez (C.I: 52411223)</span></p>
-    </div>
-    <div id="hc-restriccion-banner" style="margin-bottom:15px;"></div>
-    <div class="card">
-        <div class="card-title">Detalle de la Consulta</div>
-        <form class="form-grid" onsubmit="alert('Cambios guardados exitosamente.'); return false;">
-            {% csrf_token %}
-            <div class="form-group form-full"><label>Diagnóstico / Impresión clínica</label><textarea id="hc-diagnostico"></textarea></div>
-            <div class="form-group form-full"><label>Tratamiento e Indicaciones</label><textarea id="hc-tratamiento"></textarea></div>
-            <div class="form-full" style="display:flex;gap:10px;">
-                <button type="submit" id="hc-btn-guardar" class="btn btn-primary">Guardar Cambios</button>
-                <button type="button" class="btn btn-outline" onclick="showMainSection('agenda-container', null)">Volver</button>
-            </div>
-        </form>
-    </div>
-</section>
-
-<!-- REGISTRO DE ATENCIÓN MÉDICA -->
-<section id="atencion" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Atención Médica</h1>
-        <p>Registro de consulta · <span id="paciente-header-subtitle">Carlos López (C.I: 80234567)</span></p>
-    </div>
-    <div class="card">
-        <div class="card-title">Datos del paciente</div>
-        <div class="form-grid">
-            <div class="form-group"><label>Nombre</label><div class="readonly-field" id="paciente-nombre">Carlos López</div></div>
-            <div class="form-group"><label>Cédula</label><div class="readonly-field" id="paciente-cedula">80234567</div></div>
-            <div class="form-group"><label>Tipo de sangre</label><div class="readonly-field" id="paciente-sangre">A+</div></div>
-            <div class="form-group"><label>EPS / IPS</label><div class="readonly-field" id="paciente-eps">Sura EPS</div></div>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-title">Registro de Consulta</div>
-        <form class="form-grid" onsubmit="alert('Registro guardado exitosamente.'); showMainSection('agenda-container', null); return false;">
-            {% csrf_token %}
-            <div class="form-group form-full"><label>Motivo de consulta</label><textarea placeholder="Razón por la que acude..."></textarea></div>
-            <div class="form-group form-full"><label>Diagnóstico</label><textarea placeholder="Diagnóstico confirmado..."></textarea></div>
-            <div class="form-group"><label>Presión arterial</label><input type="text" placeholder="120/80 mmHg"></div>
-            <div class="form-group"><label>Frecuencia cardíaca</label><input type="number" placeholder="lpm"></div>
-            <div class="form-group form-full"><label>Tratamiento indicado</label><textarea placeholder="Plan de manejo..."></textarea></div>
-            <div class="form-group form-full" style="background:#f8fafc;padding:12px;border:1px solid #e2e8f0;border-radius:8px;margin-top:5px;">
-                <label style="font-weight:600;color:var(--color-text,#1e293b);margin-bottom:8px;display:flex;align-items:center;gap:6px;">📅 Agendar próxima cita de control <span style="font-weight:normal;color:#64748b;font-size:0.85rem;">(Opcional)</span></label>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;">
-                    <div><label style="font-size:0.8rem;color:#475569;display:block;margin-bottom:4px;">Fecha sugerida</label><input type="date" id="fecha-cita-control" style="width:100%;"></div>
-                    <div><label style="font-size:0.8rem;color:#475569;display:block;margin-bottom:4px;">Hora / Observaciones</label><input type="text" id="obs-cita-control" placeholder="Ej: 09:00 AM - Control y exámenes" style="width:100%;"></div>
-                </div>
-            </div>
-            <div class="form-group form-full" style="flex-direction:row;align-items:center;gap:20px;margin-top:10px;">
-                <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--color-success, #28a745);font-weight:600;">
-                    <input type="radio" name="auth_salida" value="autorizar" checked onclick="toggleMotivoSalida(false)"> Autorizar salida de la clínica
-                </label>
-                <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:#dc3545;font-weight:600;">
-                    <input type="radio" name="auth_salida" value="no_autorizar" onclick="toggleMotivoSalida(true)"> No autorizar salida de la clínica
-                </label>
-            </div>
-            <div class="form-group form-full" id="container-motivo-no-salida" style="display:none;">
-                <label style="color:#dc3545;font-weight:600;">Motivo de no autorización de salida</label>
-                <textarea placeholder="Describa el motivo médico por el cual no se autoriza la salida..."></textarea>
-            </div>
-            <div class="form-full" style="margin-top:10px;display:flex;gap:10px;">
-                <button type="submit" class="btn btn-primary">Guardar Registro</button>
-                <button type="button" class="btn btn-outline" onclick="showMainSection('agenda-container', null)">Cancelar</button>
-            </div>
-        </form>
     </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let pacienteActualData = {};
 function showMainSection(id, el) {
     document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = 'block';
@@ -243,57 +136,10 @@ function switchInnerTab(tabId, btn) {
     document.querySelectorAll('.tabs .tab-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
-function atenderPaciente(nombre, cedula, tipoSangre, eps) {
-    document.getElementById('paciente-header-subtitle').textContent = `${nombre} (C.I: ${cedula})`;
-    document.getElementById('paciente-nombre').textContent = nombre;
-    document.getElementById('paciente-cedula').textContent = cedula;
-    document.getElementById('paciente-sangre').textContent = tipoSangre;
-    document.getElementById('paciente-eps').textContent = eps;
-    showMainSection('atencion', null);
-    return false;
-}
-function verDetalleAtendido(nombre, cedula, fecha, hora, tipoSangre, eps, esHoy) {
-    pacienteActualData = { nombre, cedula, fecha, hora, tipoSangre, eps, esHoy };
-    document.getElementById('det-fechahora').textContent = `${fecha} ${hora}`;
-    document.getElementById('det-nombre').textContent = nombre;
-    document.getElementById('det-cedula').textContent = cedula;
-    document.getElementById('det-sangre').textContent = tipoSangre;
-    document.getElementById('det-eps').textContent = eps;
-    showMainSection('detalle-atendido', null);
-    return false;
-}
-function verHistoriaDePacienteActual() {
-    verHistoriaRestringida(pacienteActualData.nombre, pacienteActualData.cedula, pacienteActualData.fecha, pacienteActualData.esHoy, 'Consulta de control y revisión general.', 'Tratamiento activo. Paciente con signos vitales normales.');
-}
-function verHistoriaRestringida(nombre, cedula, fecha, esHoy, diag, trat) {
-    document.getElementById('hc-header-subtitle').textContent = `${nombre} (C.I: ${cedula}) · Fecha: ${fecha}`;
-    document.getElementById('hc-diagnostico').value = diag || '';
-    document.getElementById('hc-tratamiento').value = trat || '';
-    const banner = document.getElementById('hc-restriccion-banner');
-    const btnGuardar = document.getElementById('hc-btn-guardar');
-    const diagInput = document.getElementById('hc-diagnostico');
-    const tratInput = document.getElementById('hc-tratamiento');
-    if (esHoy) {
-        banner.innerHTML = `<span class="badge badge-success" style="padding:8px 14px;font-size:0.9rem;">✓ Cita de Hoy (${fecha}): Edición Permitida</span>`;
-        diagInput.disabled = false; tratInput.disabled = false; btnGuardar.style.display = 'inline-block';
-    } else {
-        banner.innerHTML = `<span class="badge badge-warning" style="background:#dc3545;color:#fff;padding:8px 14px;font-size:0.9rem;">🔒 Fecha Anterior (${fecha}): Información Restringida (Solo Lectura)</span>`;
-        diagInput.disabled = true; tratInput.disabled = true; btnGuardar.style.display = 'none';
-    }
-    showMainSection('historia-restringida', null);
-    return false;
-}
 function filterTable(inputId, tableId) {
     const filter = document.getElementById(inputId).value.toLowerCase();
     const trs = document.getElementById(tableId).getElementsByTagName('tr');
     for (let i = 1; i < trs.length; i++) trs[i].style.display = trs[i].textContent.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
-}
-function toggleMotivoSalida(show) {
-    const container = document.getElementById('container-motivo-no-salida');
-    if (container) container.style.display = show ? 'block' : 'none';
-}
-function solicitarAtencion(nombre) {
-    alert(`Solicitud enviada para atender al paciente ${nombre}. Notificaremos la asignación.`);
 }
 </script>
 {% endblock %}

@@ -6,7 +6,7 @@ from pulse_sas.internal.pulse_sas.personas import views as personas_views
 from pulse_sas.internal.pulse_sas.citas import views as citas_views
 
 urlpatterns = [
-    path('',                    views.login_view,         name='home'),
+    path('',                    views.landing_view,       name='home'),
     path('login/',              views.login_view,         name='login'),
     path('logout/',             views.AccountsLogoutView.as_view(), name='logout'),
     path('dashboard/',          views.dashboard,          name='dashboard'),
@@ -52,4 +52,11 @@ urlpatterns = [
     path('cliente/contacto/',         personas_views.guardar_contacto_emergencia, name='cliente_contacto'),
     path('cliente/cita/solicitar/',   citas_views.solicitar_cita,                 name='cliente_solicitar_cita'),
     path('cliente/cita/horarios/',    citas_views.horarios_disponibles,           name='cliente_horarios'),
+
+    # ── Historia clínica / receta ("epicrisis") ──────────────────────
+    path('medico/cita/<int:cita_id>/atender/',        personas_views.atender_cita,      name='atender_cita'),
+    path('medico/paciente/<int:persona_id>/historias/', personas_views.historia_paciente, name='historia_paciente'),
+    path('medico/historia/<int:historia_id>/',        personas_views.historia_detalle,  name='historia_detalle'),
+    path('medico/historia/<int:historia_id>/editar/', personas_views.editar_historia,   name='editar_historia'),
+    path('medico/historia/<int:historia_id>/receta/', personas_views.receta_view,       name='ver_receta'),
 ]

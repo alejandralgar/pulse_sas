@@ -1,3 +1,4 @@
+from .historia import ConsultaForm, ItemRecetaFormSet, RecetaForm
 from .perfil import ContactoEmergenciaForm, MiPerfilForm, PerfilEditableForm
 from .registro import (
     AdminEditarUsuarioForm,
@@ -18,4 +19,7 @@ __all__ = [
     'EmpleadoRegistroForm',
     'RolForm',
     'ConvenioForm',
+    'ConsultaForm',
+    'RecetaForm',
+    'ItemRecetaFormSet',
 ]

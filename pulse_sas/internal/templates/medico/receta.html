@@ -1,0 +1,83 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Receta Médica · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Médico</div>
+<nav>
+    <a href="{% url 'historia_detalle' historia.id %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Volver a la historia clínica
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<section class="section-content">
+    <div class="page-header">
+        <h1>Receta Médica</h1>
+        <p>
+            {{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})
+            -- Consulta del {{ historia.fecha_ingreso_paciente|date:"Y-m-d" }}
+        </p>
+    </div>
+
+    {% if puede_editar %}
+    <div class="card">
+        <div class="card-title">Editar Receta</div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom:16px;">
+                <label for="{{ receta_form.indicaciones_generales.id_for_label }}">Indicaciones generales</label>
+                {{ receta_form.indicaciones_generales }}
+            </div>
+            {{ formset.management_form }}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Indicaciones</th>{% if formset.can_delete %}<th>Eliminar</th>{% endif %}</tr></thead>
+                    <tbody>
+                        {% for item_form in formset %}
+                        <tr>
+                            <td>{{ item_form.medicamento }}{{ item_form.id }}</td>
+                            <td>{{ item_form.dosis }}</td>
+                            <td>{{ item_form.frecuencia }}</td>
+                            <td>{{ item_form.duracion }}</td>
+                            <td>{{ item_form.indicaciones }}</td>
+                            {% if formset.can_delete %}<td>{{ item_form.DELETE }}</td>{% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="form-full" style="margin-top:16px;">
+                <button type="submit" class="btn btn-primary">Guardar Receta</button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-title">Indicaciones generales</div>
+        <p>{{ receta.indicaciones_generales|default:"—" }}</p>
+    </div>
+    <div class="card">
+        <div class="card-title">Medicamentos</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Indicaciones</th></tr></thead>
+                <tbody>
+                    {% for item in receta.medicamentos.all %}
+                    <tr>
+                        <td>{{ item.medicamento }}</td><td>{{ item.dosis }}</td>
+                        <td>{{ item.frecuencia }}</td><td>{{ item.duracion }}</td>
+                        <td>{{ item.indicaciones }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">Todavía no hay receta registrada para esta consulta.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
