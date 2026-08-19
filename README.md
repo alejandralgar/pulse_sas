@@ -64,7 +64,7 @@ Con el servidor corriendo, abrir:
 
 - `http://127.0.0.1:8000/login/` — login del sistema (pacientes, personal clínico y administrativo).
 - `http://127.0.0.1:8000/django-admin/` — panel nativo de Django (superusuario).
-- `http://127.0.0.1:8000/admin/` — panel Admin propio del proyecto (roles, registro de usuarios).
+- `http://127.0.0.1:8000/dashboard/admin/` — panel Admin propio del proyecto (roles, usuarios, convenios).
 
 El acceso y las vistas disponibles dependen del rol del usuario autenticado.
 
@@ -127,17 +127,33 @@ pulse_sas_django/
 python app.py runserver              # levantar servidor de desarrollo
 python app.py migrate                # aplicar migraciones pendientes
 python app.py makemigrations         # generar migraciones nuevas
+python app.py makemigrations --check --dry-run   # verificar que no falta ninguna migración
 python app.py createsuperuser        # crear usuario admin
 python app.py check                  # verificar que el proyecto no tiene errores
+python app.py test pulse_sas --noinput   # correr toda la suite de tests
 python app.py shell                  # consola interactiva con el ORM cargado
 ```
 
 Usar `.\venv\Scripts\python.exe app.py ...` si el venv no está activado.
 
+### Tests
+
+```bash
+python app.py test pulse_sas --noinput
+```
+
+Corre contra una base de datos de prueba separada (`test_citas_pulse_sas`)
+que Django crea y destruye solo en cada corrida — no toca la base de datos
+real, no hace falta backupear nada antes de correr tests. Requiere que tu
+usuario de Postgres (`DB_USER`) tenga permiso `CREATEDB`; el usuario
+`postgres` por defecto ya lo tiene.
+
 ## Contribución
 
 - Antes de trabajar: `git pull`, luego `python app.py migrate` (por si hay migraciones nuevas).
+- Antes de subir cambios: `python app.py test pulse_sas --noinput` — la suite debe pasar completa.
 - Las migraciones se commitean junto con el cambio de modelo que las originó, en el mismo commit.
+- Si una migración usa `SeparateDatabaseAndState`, `database_operations` tiene que tener las operaciones reales, nunca una lista vacía — una migración vacía en `database_operations` le miente al ORM (dice que agregó una columna sin crearla de verdad) y rompe `migrate` en cualquier base de datos nueva, aunque la tuya ya migrada no lo note.
 - Al agregar o modificar un modelo, regenerar el dump de la base de datos y commitearlo junto con la migración:
   ```bash
   pg_dump -U postgres -h localhost -d citas_pulse_sas --no-owner --no-privileges -f sql\citas_pulse_sas.sql
