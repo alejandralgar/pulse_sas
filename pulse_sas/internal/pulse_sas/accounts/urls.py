@@ -53,6 +53,7 @@ urlpatterns = [
 
     # ── Historia clínica / receta ("epicrisis") ──────────────────────
     path('medico/cita/<int:cita_id>/atender/',        personas_views.atender_cita,      name='atender_cita'),
+    path('medico/cita/<int:cita_id>/disponibilidad-proxima-cita/', personas_views.disponibilidad_proxima_cita, name='disponibilidad_proxima_cita'),
     path('medico/paciente/<int:persona_id>/historias/', personas_views.historia_paciente, name='historia_paciente'),
     path('medico/historia/<int:historia_id>/',        personas_views.historia_detalle,  name='historia_detalle'),
     path('medico/historia/<int:historia_id>/editar/', personas_views.editar_historia,   name='editar_historia'),

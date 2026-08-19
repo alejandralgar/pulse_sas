@@ -26,15 +26,10 @@ class Migration(migrations.Migration):
                 'db_table': 'convenio',
             },
         ),
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.AddField(
-                    model_name='persona',
-                    name='fecha_creacion',
-                    field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
-                    preserve_default=False,
-                ),
-            ],
-            database_operations=[]
+        migrations.AddField(
+            model_name='persona',
+            name='fecha_creacion',
+            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            preserve_default=False,
         ),
     ]

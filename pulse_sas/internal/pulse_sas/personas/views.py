@@ -142,17 +142,53 @@ def atender_cita(request, cita_id):
         messages.error(request, 'Esta cita ya fue atendida, o no está confirmada.')
         return redirect('dashboard_medico')
 
+    form_kwargs = {'medico': medico, 'paciente': cita.persona, 'hora_referencia': cita.fecha_hora}
     if request.method == 'POST':
-        form = ConsultaForm(request.POST)
+        form = ConsultaForm(request.POST, **form_kwargs)
         if form.is_valid():
             historia = form.guardar_nueva(cita=cita, medico=medico)
             messages.success(request, 'Consulta registrada correctamente.')
+            if form.advertencia_fecha_proxima_cita:
+                messages.warning(request, form.advertencia_fecha_proxima_cita)
             return redirect('historia_detalle', historia_id=historia.id)
     else:
-        form = ConsultaForm()
+        form = ConsultaForm(**form_kwargs)
 
     ctx = {'form': form, 'cita': cita, 'es_edicion': False}
     return render(request, 'medico/atender_cita.html', ctx)
+
+
+@login_required
+def disponibilidad_proxima_cita(request, cita_id):
+    """AJAX: chequea en el momento si una fecha propuesta para
+    `fecha_proxima_cita` se puede agendar con este médico (jornada +
+    choque de agenda), antes de que el médico llegue a guardar la
+    consulta -- ver 8_FALTO_RESOLVER.md."""
+    from datetime import datetime
+
+    from django.http import JsonResponse
+
+    try:
+        medico = request.user.persona
+    except Exception:
+        medico = None
+    if medico is None:
+        return JsonResponse({'disponible': False, 'motivo': 'No se encontró tu perfil de médico.'}, status=403)
+
+    cita = get_object_or_404(Cita, pk=cita_id, medico=medico)
+
+    fecha_str = request.GET.get('fecha', '')
+    try:
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'disponible': False, 'motivo': 'Fecha inválida.'})
+
+    from .forms.historia import _validar_fecha_proxima_cita
+
+    bloqueante, motivo = _validar_fecha_proxima_cita(
+        medico=medico, paciente=cita.persona, fecha=fecha, hora_referencia=cita.fecha_hora,
+    )
+    return JsonResponse({'disponible': not bloqueante, 'bloqueante': bloqueante, 'motivo': motivo})
 
 
 @login_required

@@ -34,26 +34,82 @@
             {{ formset.management_form }}
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Indicaciones</th>{% if formset.can_delete %}<th>Eliminar</th>{% endif %}</tr></thead>
-                    <tbody>
+                    <thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración</th><th>Indicaciones</th><th>Eliminar</th></tr></thead>
+                    <tbody id="medicamentos-tbody">
                         {% for item_form in formset %}
-                        <tr>
+                        <tr class="medicamento-row">
                             <td>{{ item_form.medicamento }}{{ item_form.id }}</td>
                             <td>{{ item_form.dosis }}</td>
                             <td>{{ item_form.frecuencia }}</td>
                             <td>{{ item_form.duracion }}</td>
                             <td>{{ item_form.indicaciones }}</td>
-                            {% if formset.can_delete %}<td>{{ item_form.DELETE }}</td>{% endif %}
+                            <td>
+                                {% if formset.can_delete %}<span style="display:none;">{{ item_form.DELETE }}</span>{% endif %}
+                                <button type="button" class="btn btn-outline btn-eliminar-medicamento">Eliminar</button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            <button type="button" id="btn-agregar-medicamento" class="btn btn-outline" style="margin-top:8px;">+ Agregar medicamento</button>
+
+            <template id="medicamento-empty-row">
+                <tr class="medicamento-row">
+                    <td>{{ formset.empty_form.medicamento }}{{ formset.empty_form.id }}</td>
+                    <td>{{ formset.empty_form.dosis }}</td>
+                    <td>{{ formset.empty_form.frecuencia }}</td>
+                    <td>{{ formset.empty_form.duracion }}</td>
+                    <td>{{ formset.empty_form.indicaciones }}</td>
+                    <td>
+                        {% if formset.can_delete %}<span style="display:none;">{{ formset.empty_form.DELETE }}</span>{% endif %}
+                        <button type="button" class="btn btn-outline btn-eliminar-medicamento">Eliminar</button>
+                    </td>
+                </tr>
+            </template>
+
             <div class="form-full" style="margin-top:16px;">
                 <button type="submit" class="btn btn-primary">Guardar Receta</button>
             </div>
         </form>
     </div>
+
+    <script>
+    (function () {
+        var tbody = document.getElementById('medicamentos-tbody');
+        var totalForms = document.getElementById('id_medicamentos-TOTAL_FORMS');
+        var emptyTemplate = document.getElementById('medicamento-empty-row');
+        var btnAgregar = document.getElementById('btn-agregar-medicamento');
+        if (!tbody || !totalForms || !emptyTemplate || !btnAgregar) return;
+
+        function marcarEliminar(row) {
+            var checkbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            var idInput = row.querySelector('input[type="hidden"][name$="-id"]');
+            var esExistente = idInput && idInput.value;
+            if (esExistente && checkbox) {
+                checkbox.checked = true;
+            } else {
+                row.querySelectorAll('input[type="text"]').forEach(function (i) { i.value = ''; });
+            }
+            row.style.display = 'none';
+        }
+
+        tbody.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn-eliminar-medicamento')) {
+                marcarEliminar(e.target.closest('tr'));
+            }
+        });
+
+        btnAgregar.addEventListener('click', function () {
+            var index = parseInt(totalForms.value, 10);
+            var html = emptyTemplate.innerHTML.split('__prefix__').join(index);
+            var wrapper = document.createElement('tbody');
+            wrapper.innerHTML = html;
+            tbody.appendChild(wrapper.firstElementChild);
+            totalForms.value = index + 1;
+        });
+    })();
+    </script>
     {% else %}
     <div class="card">
         <div class="card-title">Indicaciones generales</div>
