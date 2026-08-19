@@ -7,6 +7,16 @@
         <p>Solicita una nueva cita o consulta el historial de tus citas registradas</p>
     </div>
 
+    {% if proxima_cita_recomendada %}
+    <div class="alert alert-warning" style="margin-bottom:16px;">
+        Tu médico indicó que debés volver a consulta el
+        <strong>{{ proxima_cita_recomendada|date:"d/m/Y" }}</strong>. Todavía no tenés una cita
+        agendada para esa fecha --
+        <a href="#" onclick="switchSubTab('subtab-solicitar', document.querySelector('.tab-btn[data-tab=subtab-solicitar]')); return false;"
+           style="font-weight:600;">Solicitala acá</a>.
+    </div>
+    {% endif %}
+
     <!-- Navegación por pestañas (Sub-Pestañas) -->
     <div class="tabs" data-tabs>
         <button type="button" class="tab-btn {% if seccion_activa != 'miscitas' %}active{% endif %}"

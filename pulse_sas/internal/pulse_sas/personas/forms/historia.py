@@ -1,4 +1,8 @@
+import logging
+
 from django import forms
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db import transaction
 
 from ..models import (
@@ -14,6 +18,79 @@ from ..models import (
     PlanManejo,
     Receta,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def _crear_cita_control_automatica(*, paciente, medico, fecha_proxima_cita, hora_referencia):
+    """Auto-crea la cita de control ya CONFIRMADA con el mismo médico
+    tratante -- decisión de la usuaria 2026-08-18 (ver 8_FALTO_RESOLVER.md,
+    opción 3). Usa la misma hora del día que la cita original (
+    `hora_referencia`) como horario por defecto.
+
+    Si esa fecha/hora ya está ocupada (el médico tiene otra cita, o el
+    paciente ya tiene una cita ese día) NO crea nada -- se deja el aviso
+    del dashboard (`accounts/views.py::vista_cliente`) como respaldo para
+    que alguien la agende a mano en otro horario."""
+    from pulse_sas.internal.pulse_sas.citas.models import Cita
+
+    nueva_fecha_hora = hora_referencia.replace(
+        year=fecha_proxima_cita.year, month=fecha_proxima_cita.month, day=fecha_proxima_cita.day,
+    )
+
+    medico_ocupado = Cita.objects.filter(
+        medico=medico, fecha_hora=nueva_fecha_hora,
+        estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+    ).exists()
+    paciente_ocupado = Cita.objects.filter(
+        persona=paciente, fecha_hora__date=fecha_proxima_cita,
+        estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+    ).exists()
+    if medico_ocupado or paciente_ocupado:
+        return None
+
+    return Cita.objects.create(
+        persona=paciente,
+        medico=medico,
+        fecha_hora=nueva_fecha_hora,
+        estado=Cita.Estado.CONFIRMADA,
+        tipo_cita=Cita.TipoCita.CONTROL,
+        motivo='Control indicado por el médico en la consulta anterior',
+    )
+
+
+def _enviar_recordatorio_proxima_cita(paciente, fecha_proxima_cita, *, cita_ya_confirmada):
+    """Best-effort: si falla el correo (SMTP caído, etc.) no debe tumbar
+    el guardado de la consulta, que ya quedó en la base de datos."""
+    if not paciente.correo:
+        return
+    if cita_ya_confirmada:
+        cuerpo = (
+            f'Hola {paciente.nombre},\n\n'
+            f'Tu médico indicó que debes volver a consulta el '
+            f'{fecha_proxima_cita:%d/%m/%Y}. Ya te agendamos y confirmamos esa '
+            f'cita automáticamente -- podés verla en "Mis citas" dentro de '
+            f'Pulse SAS.\n\n-- Pulse SAS'
+        )
+    else:
+        cuerpo = (
+            f'Hola {paciente.nombre},\n\n'
+            f'Tu médico indicó que debes volver a consulta el '
+            f'{fecha_proxima_cita:%d/%m/%Y}. Ese horario no se pudo agendar '
+            f'automáticamente (puede estar ocupado) -- ingresa a Pulse SAS y '
+            f'solicita tu cita para esa fecha desde "Solicitar Citas".\n\n'
+            f'-- Pulse SAS'
+        )
+    try:
+        send_mail(
+            subject='Recordatorio: tu próxima cita -- Pulse SAS',
+            message=cuerpo,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[paciente.correo],
+            fail_silently=False,
+        )
+    except Exception:
+        logger.exception('No se pudo enviar recordatorio de próxima cita a %s', paciente.correo)
 
 
 class ConsultaForm(forms.Form):
@@ -158,6 +235,16 @@ class ConsultaForm(forms.Form):
         cita.historia_clinica = historia
         cita.estado = Cita.Estado.ATENDIDA
         cita.save(update_fields=['historia_clinica', 'estado'])
+
+        if d.get('fecha_proxima_cita'):
+            cita_control = _crear_cita_control_automatica(
+                paciente=cita.persona, medico=medico,
+                fecha_proxima_cita=d['fecha_proxima_cita'], hora_referencia=cita.fecha_hora,
+            )
+            _enviar_recordatorio_proxima_cita(
+                cita.persona, d['fecha_proxima_cita'], cita_ya_confirmada=cita_control is not None,
+            )
+
         return historia
 
     @transaction.atomic
