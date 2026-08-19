@@ -424,8 +424,7 @@ def vista_guardia(request):
 
 @login_required
 def vista_cliente(request):
-    from pulse_sas.internal.pulse_sas.personas.models import ContactoEmergencia, Rol
-    from pulse_sas.internal.pulse_sas.personas.forms import PerfilEditableForm, ContactoEmergenciaForm
+    from pulse_sas.internal.pulse_sas.personas.models import Rol
     from pulse_sas.internal.pulse_sas.citas.forms import SolicitarCitaForm
     from pulse_sas.internal.pulse_sas.citas.models import Cita
 
@@ -438,14 +437,10 @@ def vista_cliente(request):
     except Exception:
         persona = None
 
-    contacto_emergencia = None
     citas = []
     if persona:
-        contacto_emergencia = ContactoEmergencia.objects.filter(paciente=persona).first()
         citas = Cita.objects.filter(persona=persona).order_by('-fecha_hora')[:20]
 
-    perfil_form = PerfilEditableForm(instance=persona) if persona else PerfilEditableForm()
-    contacto_form = ContactoEmergenciaForm(instance=contacto_emergencia)
     cita_form = SolicitarCitaForm()
 
     # Citas para el calendario (JSON)
@@ -462,13 +457,10 @@ def vista_cliente(request):
 
     ctx = {
         'persona': persona,
-        'perfil_form': perfil_form,
-        'contacto_form': contacto_form,
         'cita_form': cita_form,
         'citas': citas,
         'citas_calendario_json': json.dumps(citas_calendario),
-        'contacto_emergencia': contacto_emergencia,
-        'seccion_activa': request.GET.get('seccion', 'perfil'),
+        'seccion_activa': request.GET.get('seccion', 'cita'),
     }
     return render(request, ROLE_TEMPLATE_MAP['cliente_paciente'], ctx)
 
