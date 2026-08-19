@@ -48,8 +48,6 @@ urlpatterns = [
     path('dashboard/empresa/',        views.vista_empresa,       name='dashboard_empresa'),
 
     # ── Cliente / Paciente ──────────────────────────────────────────
-    path('cliente/perfil/',           personas_views.actualizar_perfil,           name='cliente_perfil'),
-    path('cliente/contacto/',         personas_views.guardar_contacto_emergencia, name='cliente_contacto'),
     path('cliente/cita/solicitar/',   citas_views.solicitar_cita,                 name='cliente_solicitar_cita'),
     path('cliente/cita/horarios/',    citas_views.horarios_disponibles,           name='cliente_horarios'),
 
