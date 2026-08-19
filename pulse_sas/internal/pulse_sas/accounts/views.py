@@ -389,9 +389,12 @@ def vista_medico(request):
     agenda_hoy = []
     pacientes_atendidos = []
     if persona_medico:
+        # Incluye citas de hoy en adelante -- una cita confirmada para una
+        # fecha futura antes no aparecía en ningún lado del dashboard del
+        # médico (ver 6_ERRORES_CONOCIDOS.md, entrada 2026-08-18).
         agenda_hoy = Cita.objects.filter(
             medico=persona_medico,
-            fecha_hora__date=timezone.localdate(),
+            fecha_hora__date__gte=timezone.localdate(),
             estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA, Cita.Estado.ATENDIDA],
         ).select_related('persona').order_by('fecha_hora')
 

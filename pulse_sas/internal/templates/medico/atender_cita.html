@@ -40,6 +40,32 @@
                 {% if form.motivo_consulta.errors %}<ul class="field-errors">{% for error in form.motivo_consulta.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
             </div>
 
+            <div class="form-group form-full">
+                <label for="{{ form.padecimiento_actual.id_for_label }}">Padecimiento actual (descripción cronológica)</label>
+                {{ form.padecimiento_actual }}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.factores_desencadenantes.id_for_label }}">Factores desencadenantes o agravantes</label>
+                {{ form.factores_desencadenantes }}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.tratamientos_previos.id_for_label }}">Tratamientos previos para este padecimiento</label>
+                {{ form.tratamientos_previos }}
+            </div>
+
+            <div class="form-group form-full">
+                <label for="{{ form.antecedentes_familiares.id_for_label }}">Antecedentes heredo-familiares</label>
+                {{ form.antecedentes_familiares }}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.antecedentes_personales_patologicos.id_for_label }}">Antecedentes personales patológicos</label>
+                {{ form.antecedentes_personales_patologicos }}
+            </div>
+            <div class="form-group form-full">
+                <label for="{{ form.antecedentes_no_patologicos.id_for_label }}">Antecedentes personales no patológicos</label>
+                {{ form.antecedentes_no_patologicos }}
+            </div>
+
             <div class="form-group">
                 <label for="{{ form.presion_arterial.id_for_label }}">Presión arterial</label>
                 {{ form.presion_arterial }}
