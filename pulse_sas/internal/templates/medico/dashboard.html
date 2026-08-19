@@ -37,15 +37,16 @@
     <div id="tab-agenda" class="inner-tab-content">
         <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
-                <div class="card-title" style="margin:0;">Pacientes de hoy</div>
+                <div class="card-title" style="margin:0;">Próximas citas asignadas</div>
                 <input type="text" id="search-agenda" placeholder="Buscar paciente o cédula..." onkeyup="filterTable('search-agenda', 'table-agenda')" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:240px;">
             </div>
             <div class="table-wrap">
                 <table id="table-agenda">
-                    <thead><tr><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th><th>Acción</th></tr></thead>
+                    <thead><tr><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Cédula</th><th>Tipo de Cita</th><th>Estado</th><th>Acción</th></tr></thead>
                     <tbody>
                         {% for cita in agenda_hoy %}
                         <tr>
+                            <td>{{ cita.fecha_hora|date:"d/m/Y" }}</td>
                             <td>{{ cita.fecha_hora|date:"h:i A" }}</td>
                             <td>{{ cita.persona.nombre }} {{ cita.persona.apellido }}</td>
                             <td>{{ cita.persona.cedula }}</td>
@@ -72,7 +73,7 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6">No tenés citas asignadas para hoy.</td></tr>
+                        <tr><td colspan="7">No tenés citas asignadas.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
