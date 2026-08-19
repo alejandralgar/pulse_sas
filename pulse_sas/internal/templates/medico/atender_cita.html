@@ -100,6 +100,8 @@
             <div class="form-group">
                 <label for="{{ form.fecha_proxima_cita.id_for_label }}">Fecha próxima cita (si aplica)</label>
                 {{ form.fecha_proxima_cita }}
+                {% if form.fecha_proxima_cita.errors %}<ul class="field-errors">{% for error in form.fecha_proxima_cita.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                {% if not es_edicion %}<div id="disponibilidad-proxima-cita" class="field-hint"></div>{% endif %}
             </div>
 
             <div class="form-full" style="display:flex;gap:10px;">
@@ -109,4 +111,42 @@
         </form>
     </div>
 </section>
+
+{% if not es_edicion %}
+<script>
+(function () {
+    const input = document.getElementById('{{ form.fecha_proxima_cita.id_for_label }}');
+    const hint = document.getElementById('disponibilidad-proxima-cita');
+    if (!input || !hint) return;
+
+    input.addEventListener('change', function () {
+        const fecha = input.value;
+        hint.textContent = '';
+        hint.style.color = '';
+        if (!fecha) return;
+
+        hint.textContent = 'Revisando disponibilidad...';
+        hint.style.color = '#888';
+
+        fetch('{% url "disponibilidad_proxima_cita" cita.id %}?fecha=' + encodeURIComponent(fecha), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.bloqueante) {
+                    hint.textContent = data.motivo || 'Esa fecha no se puede agendar.';
+                    hint.style.color = '#b00020';
+                } else if (data.motivo) {
+                    hint.textContent = data.motivo;
+                    hint.style.color = '#b06a00';
+                } else {
+                    hint.textContent = 'Disponible para agendar control automáticamente.';
+                    hint.style.color = '#2a7a2a';
+                }
+            })
+            .catch(function () { hint.textContent = ''; });
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}
