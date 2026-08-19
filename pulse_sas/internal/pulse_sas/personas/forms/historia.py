@@ -2,11 +2,13 @@ from django import forms
 from django.db import transaction
 
 from ..models import (
+    Antecedente,
     Diagnostico,
     DatosAdministrativos,
     ExamenFisico,
     HistoriaClinica,
     HistoriaClinicaPersona,
+    HistoriaEnfermedadActual,
     ItemReceta,
     MotivoConsulta,
     PlanManejo,
@@ -23,6 +25,30 @@ class ConsultaForm(forms.Form):
 
     motivo_consulta = forms.CharField(
         label='Motivo de consulta', widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    padecimiento_actual = forms.CharField(
+        label='Padecimiento actual (descripción cronológica)', required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    factores_desencadenantes = forms.CharField(
+        label='Factores desencadenantes o agravantes', required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    tratamientos_previos = forms.CharField(
+        label='Tratamientos previos para este padecimiento', required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    antecedentes_familiares = forms.CharField(
+        label='Antecedentes heredo-familiares', required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    antecedentes_personales_patologicos = forms.CharField(
+        label='Antecedentes personales patológicos', required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
+    )
+    antecedentes_no_patologicos = forms.CharField(
+        label='Antecedentes personales no patológicos', required=False,
+        widget=forms.Textarea(attrs={'rows': 2}),
     )
     tratamiento = forms.CharField(
         label='Tratamiento (resumen)', widget=forms.Textarea(attrs={'rows': 2}),
@@ -67,6 +93,14 @@ class ConsultaForm(forms.Form):
                 initial.setdefault('tratamiento_indicado', historia.plan_de_manejo.tratamiento_indicado)
                 initial.setdefault('recomendaciones', historia.plan_de_manejo.recomendaciones)
                 initial.setdefault('fecha_proxima_cita', historia.plan_de_manejo.fecha_proxima_cita)
+            if hasattr(historia, 'enfermedad_actual'):
+                initial.setdefault('padecimiento_actual', historia.enfermedad_actual.descripcion_cronologica)
+                initial.setdefault('factores_desencadenantes', historia.enfermedad_actual.factores_desencadenantes)
+                initial.setdefault('tratamientos_previos', historia.enfermedad_actual.tratamientos_previos)
+            if hasattr(historia, 'antecedente'):
+                initial.setdefault('antecedentes_familiares', historia.antecedente.familiares)
+                initial.setdefault('antecedentes_personales_patologicos', historia.antecedente.personales_patologicos)
+                initial.setdefault('antecedentes_no_patologicos', historia.antecedente.no_patologicos)
         super().__init__(*args, initial=initial, **kwargs)
 
     @transaction.atomic
@@ -89,6 +123,18 @@ class ConsultaForm(forms.Form):
             rol_en_historia=HistoriaClinicaPersona.RolEnHistoria.MEDICO_TRATANTE,
         )
         MotivoConsulta.objects.create(historia_clinica=historia, descripcion=d['motivo_consulta'])
+        HistoriaEnfermedadActual.objects.create(
+            historia_clinica=historia,
+            descripcion_cronologica=d.get('padecimiento_actual', ''),
+            factores_desencadenantes=d.get('factores_desencadenantes', ''),
+            tratamientos_previos=d.get('tratamientos_previos', ''),
+        )
+        Antecedente.objects.create(
+            historia_clinica=historia,
+            familiares=d.get('antecedentes_familiares', ''),
+            personales_patologicos=d.get('antecedentes_personales_patologicos', ''),
+            no_patologicos=d.get('antecedentes_no_patologicos', ''),
+        )
         ExamenFisico.objects.create(
             historia_clinica=historia,
             presion_arterial=d.get('presion_arterial', ''),
@@ -122,6 +168,22 @@ class ConsultaForm(forms.Form):
 
         MotivoConsulta.objects.update_or_create(
             historia_clinica=historia, defaults={'descripcion': d['motivo_consulta']},
+        )
+        HistoriaEnfermedadActual.objects.update_or_create(
+            historia_clinica=historia,
+            defaults={
+                'descripcion_cronologica': d.get('padecimiento_actual', ''),
+                'factores_desencadenantes': d.get('factores_desencadenantes', ''),
+                'tratamientos_previos': d.get('tratamientos_previos', ''),
+            },
+        )
+        Antecedente.objects.update_or_create(
+            historia_clinica=historia,
+            defaults={
+                'familiares': d.get('antecedentes_familiares', ''),
+                'personales_patologicos': d.get('antecedentes_personales_patologicos', ''),
+                'no_patologicos': d.get('antecedentes_no_patologicos', ''),
+            },
         )
         ExamenFisico.objects.update_or_create(
             historia_clinica=historia,
