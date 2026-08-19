@@ -427,7 +427,9 @@ def vista_guardia(request):
 
 @login_required
 def vista_cliente(request):
-    from pulse_sas.internal.pulse_sas.personas.models import Rol
+    from django.utils import timezone
+
+    from pulse_sas.internal.pulse_sas.personas.models import HistoriaClinicaPersona, PlanManejo, Rol
     from pulse_sas.internal.pulse_sas.citas.forms import SolicitarCitaForm
     from pulse_sas.internal.pulse_sas.citas.models import Cita
 
@@ -441,8 +443,28 @@ def vista_cliente(request):
         persona = None
 
     citas = []
+    proxima_cita_recomendada = None
     if persona:
         citas = Cita.objects.filter(persona=persona).order_by('-fecha_hora')[:20]
+
+        # Aviso de "debés agendar" -- el médico dejó una fecha sugerida en
+        # el Plan de manejo (PlanManejo.fecha_proxima_cita) que todavía no
+        # tiene una Cita real creada para esa fecha. Ver 8_FALTO_RESOLVER.md.
+        historias_como_paciente = HistoriaClinicaPersona.objects.filter(
+            persona=persona, rol_en_historia=HistoriaClinicaPersona.RolEnHistoria.PACIENTE,
+        ).values_list('historia_clinica_id', flat=True)
+        plan_pendiente = PlanManejo.objects.filter(
+            historia_clinica_id__in=historias_como_paciente,
+            fecha_proxima_cita__gte=timezone.localdate(),
+        ).order_by('fecha_proxima_cita').first()
+        if plan_pendiente:
+            ya_agendada = Cita.objects.filter(
+                persona=persona,
+                fecha_hora__date=plan_pendiente.fecha_proxima_cita,
+                estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+            ).exists()
+            if not ya_agendada:
+                proxima_cita_recomendada = plan_pendiente.fecha_proxima_cita
 
     cita_form = SolicitarCitaForm()
 
@@ -463,6 +485,7 @@ def vista_cliente(request):
         'cita_form': cita_form,
         'citas': citas,
         'citas_calendario_json': json.dumps(citas_calendario),
+        'proxima_cita_recomendada': proxima_cita_recomendada,
         'seccion_activa': request.GET.get('seccion', 'cita'),
     }
     return render(request, ROLE_TEMPLATE_MAP['cliente_paciente'], ctx)
