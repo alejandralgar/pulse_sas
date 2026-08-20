@@ -9,65 +9,11 @@ from pulse_sas.internal.pulse_sas.citas.models import Cita
 
 from .forms import (
     ConsultaForm, ContactoEmergenciaForm, ItemRecetaFormSet, MiPerfilForm,
-    PerfilEditableForm, RecetaForm,
+    RecetaForm,
 )
 from .models import (
     ContactoEmergencia, HistoriaClinica, HistoriaClinicaPersona, Persona, Receta, Rol,
 )
-
-
-def _errores_form(form):
-    partes = []
-    for campo, errores in form.errors.items():
-        etiqueta = form.fields[campo].label if campo in form.fields else None
-        for error in errores:
-            partes.append(f'{etiqueta}: {error}' if etiqueta else error)
-    return ' '.join(partes)
-
-
-@login_required
-def actualizar_perfil(request):
-    try:
-        persona = request.user.persona
-    except Exception:
-        messages.error(request, 'No se encontró tu perfil de paciente.')
-        return redirect('dashboard')
-
-    if request.method == 'POST':
-        form = PerfilEditableForm(request.POST, instance=persona)
-        if form.is_valid():
-            form.save()
-            # Sincronizar email con el User de Django
-            request.user.email = form.cleaned_data['correo']
-            request.user.save(update_fields=['email'])
-            messages.success(request, 'Datos personales actualizados correctamente.')
-        else:
-            messages.error(request, f'No se pudo actualizar tu perfil: {_errores_form(form)}')
-
-    return redirect('dashboard_cliente')
-
-
-@login_required
-def guardar_contacto_emergencia(request):
-    try:
-        persona = request.user.persona
-    except Exception:
-        messages.error(request, 'No se encontró tu perfil de paciente.')
-        return redirect('dashboard')
-
-    contacto_existente = ContactoEmergencia.objects.filter(paciente=persona).first()
-
-    if request.method == 'POST':
-        form = ContactoEmergenciaForm(request.POST, instance=contacto_existente)
-        if form.is_valid():
-            contacto = form.save(commit=False)
-            contacto.paciente = persona
-            contacto.save()
-            messages.success(request, 'Persona de contacto guardada correctamente.')
-        else:
-            messages.error(request, f'No se pudo guardar la persona de contacto: {_errores_form(form)}')
-
-    return redirect('dashboard_cliente')
 
 
 @login_required
@@ -86,6 +32,8 @@ def mi_perfil(request):
 
     perfil_form = MiPerfilForm(instance=persona)
     password_form = PasswordChangeForm(request.user)
+    contacto_emergencia = ContactoEmergencia.objects.filter(paciente=persona).first()
+    contacto_form = ContactoEmergenciaForm(instance=contacto_emergencia)
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
@@ -105,10 +53,21 @@ def mi_perfil(request):
                 messages.success(request, 'Contraseña actualizada correctamente.')
                 return redirect('mi_perfil')
 
+        elif accion == 'guardar_contacto':
+            contacto_form = ContactoEmergenciaForm(request.POST, instance=contacto_emergencia)
+            if contacto_form.is_valid():
+                contacto = contacto_form.save(commit=False)
+                contacto.paciente = persona
+                contacto.save()
+                messages.success(request, 'Persona de contacto guardada correctamente.')
+                return redirect('mi_perfil')
+
     ctx = {
         'perfil_form': perfil_form,
         'password_form': password_form,
         'persona': persona,
+        'contacto_form': contacto_form,
+        'contacto_emergencia': contacto_emergencia,
     }
     return render(request, 'cuenta/mi_perfil.html', ctx)
 
@@ -183,17 +142,53 @@ def atender_cita(request, cita_id):
         messages.error(request, 'Esta cita ya fue atendida, o no está confirmada.')
         return redirect('dashboard_medico')
 
+    form_kwargs = {'medico': medico, 'paciente': cita.persona, 'hora_referencia': cita.fecha_hora}
     if request.method == 'POST':
-        form = ConsultaForm(request.POST)
+        form = ConsultaForm(request.POST, **form_kwargs)
         if form.is_valid():
             historia = form.guardar_nueva(cita=cita, medico=medico)
             messages.success(request, 'Consulta registrada correctamente.')
+            if form.advertencia_fecha_proxima_cita:
+                messages.warning(request, form.advertencia_fecha_proxima_cita)
             return redirect('historia_detalle', historia_id=historia.id)
     else:
-        form = ConsultaForm()
+        form = ConsultaForm(**form_kwargs)
 
     ctx = {'form': form, 'cita': cita, 'es_edicion': False}
     return render(request, 'medico/atender_cita.html', ctx)
+
+
+@login_required
+def disponibilidad_proxima_cita(request, cita_id):
+    """AJAX: chequea en el momento si una fecha propuesta para
+    `fecha_proxima_cita` se puede agendar con este médico (jornada +
+    choque de agenda), antes de que el médico llegue a guardar la
+    consulta -- ver 8_FALTO_RESOLVER.md."""
+    from datetime import datetime
+
+    from django.http import JsonResponse
+
+    try:
+        medico = request.user.persona
+    except Exception:
+        medico = None
+    if medico is None:
+        return JsonResponse({'disponible': False, 'motivo': 'No se encontró tu perfil de médico.'}, status=403)
+
+    cita = get_object_or_404(Cita, pk=cita_id, medico=medico)
+
+    fecha_str = request.GET.get('fecha', '')
+    try:
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'disponible': False, 'motivo': 'Fecha inválida.'})
+
+    from .forms.historia import _validar_fecha_proxima_cita
+
+    bloqueante, motivo = _validar_fecha_proxima_cita(
+        medico=medico, paciente=cita.persona, fecha=fecha, hora_referencia=cita.fecha_hora,
+    )
+    return JsonResponse({'disponible': not bloqueante, 'bloqueante': bloqueante, 'motivo': motivo})
 
 
 @login_required

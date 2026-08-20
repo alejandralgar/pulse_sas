@@ -46,6 +46,20 @@
     </div>
 
     <div class="card">
+        <div class="card-title">Padecimiento actual</div>
+        <p><strong>Descripción cronológica:</strong> {{ historia.enfermedad_actual.descripcion_cronologica|default:"—" }}</p>
+        <p><strong>Factores desencadenantes:</strong> {{ historia.enfermedad_actual.factores_desencadenantes|default:"—" }}</p>
+        <p><strong>Tratamientos previos:</strong> {{ historia.enfermedad_actual.tratamientos_previos|default:"—" }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Antecedentes</div>
+        <p><strong>Heredo-familiares:</strong> {{ historia.antecedente.familiares|default:"—" }}</p>
+        <p><strong>Personales patológicos:</strong> {{ historia.antecedente.personales_patologicos|default:"—" }}</p>
+        <p><strong>Personales no patológicos:</strong> {{ historia.antecedente.no_patologicos|default:"—" }}</p>
+    </div>
+
+    <div class="card">
         <div class="card-title">Examen físico</div>
         <p>Presión arterial: {{ historia.examen_fisico.presion_arterial|default:"—" }}</p>
         <p>Frecuencia cardíaca: {{ historia.examen_fisico.frecuencia_cardiaca|default:"—" }}{% if historia.examen_fisico.frecuencia_cardiaca %} lpm{% endif %}</p>

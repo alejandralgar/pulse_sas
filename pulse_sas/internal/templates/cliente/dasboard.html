@@ -5,15 +5,7 @@
 {% block sidebar %}
 <div class="sidebar-section">Mi cuenta</div>
 <nav>
-    <a href="#" id="nav-perfil" class="{% if seccion_activa != 'cita' and seccion_activa != 'miscitas' %}active{% endif %}"
-       onclick="return showSection('perfil', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-        </svg>
-        Mi Perfil
-    </a>
-    <a href="#" id="nav-cita" class="{% if seccion_activa == 'cita' or seccion_activa == 'miscitas' %}active{% endif %}"
+    <a href="#" id="nav-cita" class="active"
        onclick="return showSection('cita', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -34,7 +26,6 @@
 </div>
 {% endif %}
 
-{% include "cliente/partials/_perfil.html" %}
 {% include "cliente/partials/_citas.html" %}
 
 {# JSON de citas para el calendario — patrón seguro para JS en templates Django #}
@@ -57,7 +48,6 @@
 .alert-warning { background: #fef3c7; color: #92400e; border-left: 4px solid #d97706; }
 .form-error { color: var(--color-error); font-size: 0.78rem; margin-top: 2px; }
 
-#perfil input, #perfil select,
 #cita input, #cita select, #cita textarea {
     width: 100%;
     padding: 10px 12px;
@@ -70,7 +60,6 @@
     box-sizing: border-box;
     transition: border-color 0.15s, box-shadow 0.15s;
 }
-#perfil input:focus, #perfil select:focus,
 #cita input:focus, #cita select:focus, #cita textarea:focus {
     outline: none;
     border-color: var(--color-primary);

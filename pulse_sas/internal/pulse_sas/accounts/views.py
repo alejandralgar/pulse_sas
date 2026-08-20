@@ -389,9 +389,12 @@ def vista_medico(request):
     agenda_hoy = []
     pacientes_atendidos = []
     if persona_medico:
+        # Incluye citas de hoy en adelante -- una cita confirmada para una
+        # fecha futura antes no aparecía en ningún lado del dashboard del
+        # médico (ver 6_ERRORES_CONOCIDOS.md, entrada 2026-08-18).
         agenda_hoy = Cita.objects.filter(
             medico=persona_medico,
-            fecha_hora__date=timezone.localdate(),
+            fecha_hora__date__gte=timezone.localdate(),
             estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA, Cita.Estado.ATENDIDA],
         ).select_related('persona').order_by('fecha_hora')
 
@@ -424,8 +427,9 @@ def vista_guardia(request):
 
 @login_required
 def vista_cliente(request):
-    from pulse_sas.internal.pulse_sas.personas.models import ContactoEmergencia, Rol
-    from pulse_sas.internal.pulse_sas.personas.forms import PerfilEditableForm, ContactoEmergenciaForm
+    from django.utils import timezone
+
+    from pulse_sas.internal.pulse_sas.personas.models import HistoriaClinicaPersona, PlanManejo, Rol
     from pulse_sas.internal.pulse_sas.citas.forms import SolicitarCitaForm
     from pulse_sas.internal.pulse_sas.citas.models import Cita
 
@@ -438,14 +442,30 @@ def vista_cliente(request):
     except Exception:
         persona = None
 
-    contacto_emergencia = None
     citas = []
+    proxima_cita_recomendada = None
     if persona:
-        contacto_emergencia = ContactoEmergencia.objects.filter(paciente=persona).first()
         citas = Cita.objects.filter(persona=persona).order_by('-fecha_hora')[:20]
 
-    perfil_form = PerfilEditableForm(instance=persona) if persona else PerfilEditableForm()
-    contacto_form = ContactoEmergenciaForm(instance=contacto_emergencia)
+        # Aviso de "debés agendar" -- el médico dejó una fecha sugerida en
+        # el Plan de manejo (PlanManejo.fecha_proxima_cita) que todavía no
+        # tiene una Cita real creada para esa fecha. Ver 8_FALTO_RESOLVER.md.
+        historias_como_paciente = HistoriaClinicaPersona.objects.filter(
+            persona=persona, rol_en_historia=HistoriaClinicaPersona.RolEnHistoria.PACIENTE,
+        ).values_list('historia_clinica_id', flat=True)
+        plan_pendiente = PlanManejo.objects.filter(
+            historia_clinica_id__in=historias_como_paciente,
+            fecha_proxima_cita__gte=timezone.localdate(),
+        ).order_by('fecha_proxima_cita').first()
+        if plan_pendiente:
+            ya_agendada = Cita.objects.filter(
+                persona=persona,
+                fecha_hora__date=plan_pendiente.fecha_proxima_cita,
+                estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA],
+            ).exists()
+            if not ya_agendada:
+                proxima_cita_recomendada = plan_pendiente.fecha_proxima_cita
+
     cita_form = SolicitarCitaForm()
 
     # Citas para el calendario (JSON)
@@ -462,13 +482,11 @@ def vista_cliente(request):
 
     ctx = {
         'persona': persona,
-        'perfil_form': perfil_form,
-        'contacto_form': contacto_form,
         'cita_form': cita_form,
         'citas': citas,
         'citas_calendario_json': json.dumps(citas_calendario),
-        'contacto_emergencia': contacto_emergencia,
-        'seccion_activa': request.GET.get('seccion', 'perfil'),
+        'proxima_cita_recomendada': proxima_cita_recomendada,
+        'seccion_activa': request.GET.get('seccion', 'cita'),
     }
     return render(request, ROLE_TEMPLATE_MAP['cliente_paciente'], ctx)
 

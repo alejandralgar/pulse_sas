@@ -48,13 +48,12 @@ urlpatterns = [
     path('dashboard/empresa/',        views.vista_empresa,       name='dashboard_empresa'),
 
     # ── Cliente / Paciente ──────────────────────────────────────────
-    path('cliente/perfil/',           personas_views.actualizar_perfil,           name='cliente_perfil'),
-    path('cliente/contacto/',         personas_views.guardar_contacto_emergencia, name='cliente_contacto'),
     path('cliente/cita/solicitar/',   citas_views.solicitar_cita,                 name='cliente_solicitar_cita'),
     path('cliente/cita/horarios/',    citas_views.horarios_disponibles,           name='cliente_horarios'),
 
     # ── Historia clínica / receta ("epicrisis") ──────────────────────
     path('medico/cita/<int:cita_id>/atender/',        personas_views.atender_cita,      name='atender_cita'),
+    path('medico/cita/<int:cita_id>/disponibilidad-proxima-cita/', personas_views.disponibilidad_proxima_cita, name='disponibilidad_proxima_cita'),
     path('medico/paciente/<int:persona_id>/historias/', personas_views.historia_paciente, name='historia_paciente'),
     path('medico/historia/<int:historia_id>/',        personas_views.historia_detalle,  name='historia_detalle'),
     path('medico/historia/<int:historia_id>/editar/', personas_views.editar_historia,   name='editar_historia'),
