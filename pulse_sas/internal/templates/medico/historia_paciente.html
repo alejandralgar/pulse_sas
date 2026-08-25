@@ -3,20 +3,17 @@
 {% block title %}Historial de {{ paciente.nombre }} · Pulse SAS{% endblock %}
 
 {% block sidebar %}
-<div class="sidebar-section">Médico</div>
-<nav>
-    <a href="{% url 'dashboard_medico' %}">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-        Volver a la agenda
-    </a>
-</nav>
+{% include "medico/_sidebar.html" %}
 {% endblock %}
 
 {% block main %}
 <section class="section-content">
-    <div class="page-header">
-        <h1>Historial Clínico</h1>
-        <p>{{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})</p>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div>
+            <h1>Historial Clínico</h1>
+            <p>{{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})</p>
+        </div>
+        <a href="{% url 'dashboard_medico' %}" class="btn btn-outline btn-sm">Volver</a>
     </div>
 
     <div class="card">

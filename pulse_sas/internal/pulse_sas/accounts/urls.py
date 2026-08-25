@@ -40,7 +40,8 @@ urlpatterns = [
 
     # Acceso directo por rol
     path('dashboard/admin/',          views.vista_admin,         name='dashboard_admin'),
-    path('dashboard/administrativo/', views.vista_administrativo, name='dashboard_administrativo'),
+    path('dashboard/gerente/',        views.vista_gerente,       name='dashboard_gerente'),
+    path('dashboard/recepcionista/',  views.vista_recepcionista, name='dashboard_recepcionista'),
     path('dashboard/medico/',         views.vista_medico,        name='dashboard_medico'),
     path('dashboard/enfermera/',      views.vista_enfermera,     name='dashboard_enfermera'),
     path('dashboard/guardia/',        views.vista_guardia,       name='dashboard_guardia'),

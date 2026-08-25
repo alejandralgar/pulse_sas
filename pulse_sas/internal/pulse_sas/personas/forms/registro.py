@@ -2,9 +2,12 @@ from django import forms
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from ..models import Convenio, Persona, Rol
+from ..models import Convenio, Persona, Rol, SolicitudRegistroPaciente
 
-EMPLEADO_CATEGORIAS = [Rol.Categoria.ADMINISTRATIVO, Rol.Categoria.MEDICO, Rol.Categoria.ENFERMERA]
+EMPLEADO_CATEGORIAS = [
+    Rol.Categoria.GERENTE, Rol.Categoria.RECEPCIONISTA,
+    Rol.Categoria.MEDICO, Rol.Categoria.ENFERMERA, Rol.Categoria.GUARDIA,
+]
 
 
 class RolForm(forms.ModelForm):
@@ -27,7 +30,8 @@ class _RegistroUsuarioBaseForm(forms.Form):
     password2 = forms.CharField(widget=forms.PasswordInput, label='Confirmar contraseña')
     nombre = forms.CharField(max_length=100)
     apellido = forms.CharField(max_length=100)
-    cedula = forms.CharField(max_length=20)
+    tipo_documento = forms.ChoiceField(choices=Persona.TipoDocumento.choices, label='Tipo de documento')
+    cedula = forms.CharField(max_length=20, label='Cédula / Documento')
     fecha_nacimiento = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
     especialidad = forms.CharField(
         max_length=150, required=False, label='Especialidad (solo médicos)',
@@ -81,13 +85,14 @@ class _RegistroUsuarioBaseForm(forms.Form):
             usuario=user,
             nombre=self.cleaned_data['nombre'],
             apellido=self.cleaned_data['apellido'],
+            tipo_documento=self.cleaned_data['tipo_documento'],
             cedula=self.cleaned_data['cedula'],
             fecha_nacimiento=self.cleaned_data['fecha_nacimiento'],
             correo=self.cleaned_data['email'],
             especialidad=self.cleaned_data['especialidad'],
         )
         persona.roles.set(self.cleaned_data['roles'])
-        return user
+        return persona
 
 
 class AdminRegistroUsuarioForm(_RegistroUsuarioBaseForm):
@@ -101,6 +106,12 @@ class EmpleadoRegistroForm(_RegistroUsuarioBaseForm):
     gerencia. No puede crear Admin ni Paciente desde acá."""
 
     roles_queryset = Rol.objects.filter(categoria__in=EMPLEADO_CATEGORIAS)
+
+
+class PacienteRegistroForm(_RegistroUsuarioBaseForm):
+    """R003 — Recepcionista registra pacientes. Solo rol Cliente/Paciente."""
+
+    roles_queryset = Rol.objects.filter(categoria=Rol.Categoria.CLIENTE_PACIENTE)
 
 
 class _EditarPersonaBaseForm(forms.ModelForm):
@@ -118,7 +129,7 @@ class _EditarPersonaBaseForm(forms.ModelForm):
 
     class Meta:
         model = Persona
-        fields = ['nombre', 'apellido', 'cedula', 'fecha_nacimiento', 'correo', 'especialidad']
+        fields = ['nombre', 'apellido', 'tipo_documento', 'cedula', 'fecha_nacimiento', 'correo', 'especialidad']
         widgets = {'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'})}
         labels = {'especialidad': 'Especialidad (solo médicos)'}
 
@@ -151,4 +162,14 @@ class ConvenioForm(forms.ModelForm):
     class Meta:
         model = Convenio
         fields = ['nombre', 'nit', 'telefono', 'especialidad']
+
+
+class SolicitudRegistroPacienteForm(forms.ModelForm):
+    """Médico pide que Recepcionista registre a alguien no encontrado
+    en la búsqueda de pacientes (caso de urgencia)."""
+
+    class Meta:
+        model = SolicitudRegistroPaciente
+        fields = ['nombre', 'apellido', 'cedula', 'motivo']
+        widgets = {'motivo': forms.Textarea(attrs={'rows': 2})}
 

@@ -13,7 +13,8 @@ DEMO_PASSWORD = 'Pulsesas123'
 # (username, nombre_rol, categoria, nombre, apellido, cedula, especialidad)
 DEMO_PERSONAS = [
     ('demo_admin', 'admin', Rol.Categoria.ADMIN, 'Ana', 'Admin', '900000001', ''),
-    ('demo_recepcion', 'recepcionista', Rol.Categoria.ADMINISTRATIVO, 'Rita', 'Recepción', '900000002', ''),
+    ('demo_recepcion', 'recepcionista', Rol.Categoria.RECEPCIONISTA, 'Rita', 'Recepción', '900000002', ''),
+    ('demo_gerente', 'gerente', Rol.Categoria.GERENTE, 'Gina', 'Gerente', '900000008', ''),
     ('demo_medico', 'medico', Rol.Categoria.MEDICO, 'Marco', 'Médico', '900000003', 'Medicina general'),
     ('demo_enfermera', 'enfermera', Rol.Categoria.ENFERMERA, 'Elena', 'Enfermera', '900000004', ''),
     ('demo_guardia', 'guardia', Rol.Categoria.GUARDIA, 'Gustavo', 'Guardia', '900000005', ''),
