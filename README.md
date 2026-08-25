@@ -41,16 +41,26 @@ copy .env.example .env
 # 4. Crear la base de datos vacía (una sola vez)
 createdb -U postgres citas_pulse_sas
 
-# 5A. Camino recomendado: migraciones Django (fuente de verdad)
+# 5. Migraciones Django (única fuente de verdad — NO restaurar sql\citas_pulse_sas.sql,
+#    ver nota abajo)
 python app.py migrate
 python app.py createsuperuser
 
-# 5B. Alternativa rápida: restaurar el dump .sql directo
-# psql -U postgres -h localhost -d citas_pulse_sas -f sql\citas_pulse_sas.sql
+# 6. Datos demo: un usuario por rol (admin, médico, enfermera, guardia,
+#    paciente, empresa, recepcionista), password Demo1234! pa todos
+python app.py seed_demo_data
 
-# 6. Correr el servidor
+# 7. Correr el servidor
 python app.py runserver
 ```
+
+> **`sql/citas_pulse_sas.sql` no se restaura en desarrollo.** Es un
+> respaldo puntual, no una fuente de verdad — si lo restauras, su tabla
+> `django_migrations` queda congelada en la fecha del dump; el siguiente
+> `git pull` trae migraciones nuevas que Django cree no aplicadas, y
+> `migrate` falla o corrompe tu esquema porque las columnas ya existen.
+> Usa siempre `migrate` + `seed_demo_data` para tener el mismo estado que
+> el resto del equipo.
 
 Si `Activate.ps1` falla por política de ejecución de PowerShell:
 
@@ -129,6 +139,7 @@ python app.py migrate                # aplicar migraciones pendientes
 python app.py makemigrations         # generar migraciones nuevas
 python app.py makemigrations --check --dry-run   # verificar que no falta ninguna migración
 python app.py createsuperuser        # crear usuario admin
+python app.py seed_demo_data         # crear usuarios demo (uno por rol), idempotente
 python app.py check                  # verificar que el proyecto no tiene errores
 python app.py test pulse_sas --noinput   # correr toda la suite de tests
 python app.py shell                  # consola interactiva con el ORM cargado
@@ -154,10 +165,11 @@ usuario de Postgres (`DB_USER`) tenga permiso `CREATEDB`; el usuario
 - Antes de subir cambios: `python app.py test pulse_sas --noinput` — la suite debe pasar completa.
 - Las migraciones se commitean junto con el cambio de modelo que las originó, en el mismo commit.
 - Si una migración usa `SeparateDatabaseAndState`, `database_operations` tiene que tener las operaciones reales, nunca una lista vacía — una migración vacía en `database_operations` le miente al ORM (dice que agregó una columna sin crearla de verdad) y rompe `migrate` en cualquier base de datos nueva, aunque la tuya ya migrada no lo note.
-- Al agregar o modificar un modelo, regenerar el dump de la base de datos y commitearlo junto con la migración:
-  ```bash
-  pg_dump -U postgres -h localhost -d citas_pulse_sas --no-owner --no-privileges -f sql\citas_pulse_sas.sql
-  ```
+- `sql/citas_pulse_sas.sql` es un respaldo manual ocasional, no un paso de
+  onboarding ni de contribución normal — no lo regeneres en cada cambio de
+  modelo ni lo restaures para "avanzar rápido". Restaurarlo desalinea tu
+  `django_migrations` del historial real de git (ver nota en Instalación) y
+  es la causa más común de que `migrate` falle después de un `git pull`.
 - `.env`, `venv/`, `db.sqlite3` y `server.log` nunca se commitean.
 
 ## Autores
