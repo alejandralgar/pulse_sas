@@ -5,7 +5,8 @@ from django.contrib.auth.forms import AuthenticationForm
 ROL_CHOICES = [
     ('',                 'Selecciona tu rol...'),
     ('admin',            'Administrador'),
-    ('administrativo',   'Administrativo (Secretaria / Recepcionista)'),
+    ('gerente',          'Gerente'),
+    ('recepcionista',    'Recepcionista'),
     ('medico',           'Médico'),
     ('enfermera',        'Enfermera'),
     ('guardia',          'Guardia de Seguridad'),

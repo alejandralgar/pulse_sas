@@ -3,23 +3,20 @@
 {% block title %}Receta Médica · Pulse SAS{% endblock %}
 
 {% block sidebar %}
-<div class="sidebar-section">Médico</div>
-<nav>
-    <a href="{% url 'historia_detalle' historia.id %}">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-        Volver a la historia clínica
-    </a>
-</nav>
+{% include "medico/_sidebar.html" %}
 {% endblock %}
 
 {% block main %}
 <section class="section-content">
-    <div class="page-header">
-        <h1>Receta Médica</h1>
-        <p>
-            {{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})
-            -- Consulta del {{ historia.fecha_ingreso_paciente|date:"Y-m-d" }}
-        </p>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div>
+            <h1>Receta Médica</h1>
+            <p>
+                {{ paciente.nombre }} {{ paciente.apellido }} (C.C. {{ paciente.cedula }})
+                -- Consulta del {{ historia.fecha_ingreso_paciente|date:"Y-m-d" }}
+            </p>
+        </div>
+        <a href="{% url 'historia_detalle' historia.id %}" class="btn btn-outline btn-sm">Volver a la historia clínica</a>
     </div>
 
     {% if puede_editar %}

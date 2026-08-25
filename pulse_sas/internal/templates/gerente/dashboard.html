@@ -1,21 +1,14 @@
 {% extends "dashboard_base.html" %}
 {% load static %}
-{% block title %}Administrativo · Pulse SAS{% endblock %}
+{% block title %}Gerente · Pulse SAS{% endblock %}
 
 {% block sidebar %}
-<div class="sidebar-section">Principal</div>
+<div class="sidebar-section">Gerencia</div>
 <nav>
     <a href="#" id="nav-resumen" class="{% if seccion_activa == 'resumen' %}active{% endif %}" onclick="return showSection('resumen', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         Resumen
     </a>
-    {% if es_recepcionista %}
-    <a href="#" id="nav-citas" class="{% if seccion_activa == 'citas' %}active{% endif %}" onclick="return showSection('citas', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Citas pendientes
-        {% if citas_pendientes %}<span class="badge badge-warning" style="margin-left:auto;">{{ citas_pendientes|length }}</span>{% endif %}
-    </a>
-    {% endif %}
     <a href="#" id="nav-empleados" class="{% if seccion_activa == 'empleados' %}active{% endif %}" onclick="return showSection('empleados', this)">
         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         Registrar Empleados
@@ -30,87 +23,21 @@
 {% block main %}
 <section id="resumen" class="section-content">
     <div class="page-header">
-        <h1>Panel Administrativo</h1>
-        <p>Gerencia · Secretaría · Recepción</p>
+        <h1>Panel Gerencia</h1>
+        <p>Manejo administrativo y financiero del consultorio</p>
     </div>
     <div class="stats-grid">
-        <div class="stat-card blue"><span class="stat-label">Médicos activos</span><span class="stat-value">8</span></div>
-        <div class="stat-card green"><span class="stat-label">Enfermeras</span><span class="stat-value">12</span></div>
-        <div class="stat-card orange"><span class="stat-label">Citas hoy</span><span class="stat-value">20</span></div>
-        <div class="stat-card purple"><span class="stat-label">Personal total</span><span class="stat-value">34</span></div>
-    </div>
-    <div class="card">
-        <div class="card-title">Personal registrado</div>
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Nombre</th><th>Cédula</th><th>Rol</th><th>Correo</th><th>Estado</th></tr></thead>
-                <tbody>
-                    <tr><td>Dr. Roberto Gómez</td><td>80123456</td><td><span class="badge badge-info">Médico</span></td><td>r.gomez@pulse.co</td><td><span class="badge badge-success">Activo</span></td></tr>
-                    <tr><td>Luisa Fernández</td><td>45678912</td><td><span class="badge badge-warning">Enfermera</span></td><td>l.fernandez@pulse.co</td><td><span class="badge badge-success">Activo</span></td></tr>
-                    <tr><td>Jorge Ríos</td><td>73456123</td><td><span class="badge badge-gray">Recepcionista</span></td><td>j.rios@pulse.co</td><td><span class="badge badge-success">Activo</span></td></tr>
-                </tbody>
-            </table>
-        </div>
+        <div class="stat-card blue"><span class="stat-label">Empleados registrados</span><span class="stat-value">{{ empleados|length }}</span></div>
+        <div class="stat-card purple"><span class="stat-label">Convenios activos</span><span class="stat-value">{{ convenios|length }}</span></div>
     </div>
     {% include "partials/calendario.html" %}
 </section>
 
-{% if es_recepcionista %}
-<section id="citas" class="section-content" style="display:none;">
-    <div class="page-header">
-        <h1>Citas pendientes</h1>
-        <p>Asigná médico a las citas que solicitaron los pacientes -- el sistema sugiere uno libre a esa hora.</p>
-    </div>
-    <div class="card">
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora</th><th>Asignar médico</th></tr>
-                </thead>
-                <tbody>
-                    {% for item in citas_pendientes %}
-                    <tr>
-                        <td>{{ item.cita.persona.nombre }} {{ item.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ item.cita.persona.cedula }}</span></td>
-                        <td>{{ item.cita.get_tipo_cita_display|default:"—" }}</td>
-                        <td>{{ item.cita.motivo }}</td>
-                        <td>{{ item.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            {% if item.candidatos %}
-                            <form method="post" action="{% url 'dashboard_administrativo' %}?seccion=citas" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                                {% csrf_token %}
-                                <input type="hidden" name="accion" value="asignar_medico">
-                                <input type="hidden" name="cita_id" value="{{ item.cita.id }}">
-                                <select name="medico_id">
-                                    {% for c in item.candidatos %}
-                                    <option value="{{ c.persona.id }}"
-                                        {% if item.sugerido.id == c.persona.id %}selected{% endif %}
-                                        {% if c.ocupado %}disabled{% endif %}>
-                                        {{ c.persona.nombre }} {{ c.persona.apellido }}{% if c.persona.especialidad %} ({{ c.persona.especialidad }}){% endif %}{% if c.ocupado %} -- ocupado a esa hora{% elif c.en_turno %} -- en turno{% else %} -- sin jornada registrada{% endif %}{% if item.sugerido.id == c.persona.id %} ★ sugerido{% endif %}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
-                            </form>
-                            {% else %}
-                            <span class="badge badge-gray">No hay médicos registrados</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5">No hay citas pendientes por asignar.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-{% endif %}
-
 <section id="empleados" class="section-content" style="display:none;">
-    <div class="page-header"><h1>Registrar Empleados</h1><p>Médicos, enfermeras, gerencia y más</p></div>
+    <div class="page-header"><h1>Registrar Empleados</h1><p>Médicos, enfermeras, guardias, recepcionistas y gerencia</p></div>
     <div class="card">
         <div class="card-title">Nuevo Empleado</div>
-        <form class="form-grid" method="post" action="{% url 'dashboard_administrativo' %}?seccion=empleados">
+        <form class="form-grid" method="post" action="{% url 'dashboard_gerente' %}?seccion=empleados">
             {% csrf_token %}
             <input type="hidden" name="accion" value="crear_empleado">
             <div class="form-group">
@@ -126,6 +53,10 @@
                 {% if empleado_form.apellido.errors %}
                 <ul class="field-errors">{% for error in empleado_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
                 {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ empleado_form.tipo_documento.id_for_label }}">Tipo de documento</label>
+                {{ empleado_form.tipo_documento }}
             </div>
             <div class="form-group">
                 <label for="{{ empleado_form.cedula.id_for_label }}">Cédula</label>
@@ -219,7 +150,7 @@
     <div class="page-header"><h1>Empresas y Convenios</h1></div>
     <div class="card">
         <div class="card-title">Registrar Empresa / Convenio</div>
-        <form class="form-grid" method="post" action="{% url 'dashboard_administrativo' %}?seccion=convenios">
+        <form class="form-grid" method="post" action="{% url 'dashboard_gerente' %}?seccion=convenios">
             {% csrf_token %}
             <input type="hidden" name="accion" value="crear_convenio">
             <div class="form-group">

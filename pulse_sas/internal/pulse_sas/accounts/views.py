@@ -10,7 +10,8 @@ from .forms import LoginConRolForm
 # Mapa categoria -> template
 ROLE_TEMPLATE_MAP = {
     'admin':            'admin_rol/dashboard.html',
-    'administrativo':   'administrativo/dasboard.html',
+    'gerente':          'gerente/dashboard.html',
+    'recepcionista':    'recepcionista/dashboard.html',
     'medico':           'medico/dashboard.html',
     'enfermera':        'enfermera/dashboard.html',
     'guardia':          'guardia/dashboard.html',
@@ -31,16 +32,6 @@ def _usuario_tiene_rol(user, categoria):
         return True
     from pulse_sas.internal.pulse_sas.personas.models import Rol
     return Rol.objects.filter(categoria=categoria, personas__usuario=user).exists()
-
-
-def _tiene_rol_nombre(user, nombre_rol):
-    """Distingue sub-roles dentro de una misma categoría (ej. Recepcionista
-    vs. Gerente vs. Contadora, todos categoria=administrativo) por el
-    `Rol.nombre` exacto asignado en BD."""
-    if user.is_superuser:
-        return True
-    from pulse_sas.internal.pulse_sas.personas.models import Rol
-    return Rol.objects.filter(nombre=nombre_rol, personas__usuario=user).exists()
 
 
 def _sugerir_medico(cita):
@@ -266,7 +257,8 @@ def vista_admin(request):
         hora_inicio__lte=ahora.time(),
         hora_fin__gte=ahora.time(),
         persona__roles__categoria__in=[
-            Rol.Categoria.ADMINISTRATIVO,
+            Rol.Categoria.GERENTE,
+            Rol.Categoria.RECEPCIONISTA,
             Rol.Categoria.MEDICO,
             Rol.Categoria.ENFERMERA,
             Rol.Categoria.GUARDIA,
@@ -289,18 +281,16 @@ def vista_admin(request):
     return render(request, ROLE_TEMPLATE_MAP['admin'], ctx)
 
 @login_required
-def vista_administrativo(request):
-    from django.shortcuts import get_object_or_404
-
-    from pulse_sas.internal.pulse_sas.citas.models import Cita
+def vista_gerente(request):
+    """Gerente: manejo administrativo/financiero -- registrar empleados
+    (médicos, enfermeras, guardias, recepcionistas, otros gerentes) y
+    gestionar convenios/empresas. Ver personas/models.py::Rol.Categoria."""
     from pulse_sas.internal.pulse_sas.personas.forms import ConvenioForm, EmpleadoRegistroForm
     from pulse_sas.internal.pulse_sas.personas.models import Convenio, Persona, Rol
 
-    if not _usuario_tiene_rol(request.user, Rol.Categoria.ADMINISTRATIVO):
-        messages.error(request, 'No tienes permisos de administrativo.')
+    if not _usuario_tiene_rol(request.user, Rol.Categoria.GERENTE):
+        messages.error(request, 'No tienes permisos de gerente.')
         return redirect('dashboard')
-
-    es_recepcionista = _tiene_rol_nombre(request.user, 'recepcionista')
 
     convenio_form = ConvenioForm()
     empleado_form = EmpleadoRegistroForm()
@@ -313,16 +303,75 @@ def vista_administrativo(request):
             if convenio_form.is_valid():
                 convenio_form.save()
                 messages.success(request, 'Convenio registrado correctamente.')
-                return redirect(reverse('dashboard_administrativo') + '?seccion=convenios')
+                return redirect(reverse('dashboard_gerente') + '?seccion=convenios')
 
         elif accion == 'crear_empleado':
             empleado_form = EmpleadoRegistroForm(request.POST)
             if empleado_form.is_valid():
                 empleado_form.save()
                 messages.success(request, 'Empleado registrado correctamente.')
-                return redirect(reverse('dashboard_administrativo') + '?seccion=empleados')
+                return redirect(reverse('dashboard_gerente') + '?seccion=empleados')
 
-        elif accion == 'asignar_medico' and es_recepcionista:
+    from pulse_sas.internal.pulse_sas.personas.forms.registro import EMPLEADO_CATEGORIAS
+    empleados = Persona.objects.filter(
+        roles__categoria__in=EMPLEADO_CATEGORIAS
+    ).prefetch_related('roles').distinct().order_by('-fecha_creacion')
+
+    ctx = {
+        'convenio_form': convenio_form,
+        'convenios': Convenio.objects.all().order_by('nombre'),
+        'empleado_form': empleado_form,
+        'empleados': empleados,
+        'seccion_activa': request.GET.get('seccion', 'resumen'),
+    }
+    return render(request, ROLE_TEMPLATE_MAP['gerente'], ctx)
+
+
+@login_required
+def vista_recepcionista(request):
+    """Recepcionista: atención al paciente -- registrar pacientes,
+    asignar médico a citas pendientes, y bandeja de solicitudes de
+    registro que llegan desde Médico (caso de urgencia)."""
+    from django.shortcuts import get_object_or_404
+
+    from pulse_sas.internal.pulse_sas.citas.models import Cita
+    from pulse_sas.internal.pulse_sas.personas.forms import PacienteRegistroForm
+    from pulse_sas.internal.pulse_sas.personas.models import Persona, Rol, SolicitudRegistroPaciente
+
+    if not _usuario_tiene_rol(request.user, Rol.Categoria.RECEPCIONISTA):
+        messages.error(request, 'No tienes permisos de recepcionista.')
+        return redirect('dashboard')
+
+    solicitud_id = request.GET.get('solicitud_id')
+    solicitud_previa = None
+    if solicitud_id:
+        solicitud_previa = SolicitudRegistroPaciente.objects.filter(
+            pk=solicitud_id, atendida=False
+        ).first()
+    paciente_form = PacienteRegistroForm(
+        initial={
+            'nombre': solicitud_previa.nombre,
+            'apellido': solicitud_previa.apellido,
+            'cedula': solicitud_previa.cedula,
+        } if solicitud_previa else None
+    )
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+
+        if accion == 'crear_paciente':
+            paciente_form = PacienteRegistroForm(request.POST)
+            if paciente_form.is_valid():
+                persona = paciente_form.save()
+                solicitud_atendida_id = request.POST.get('solicitud_id')
+                if solicitud_atendida_id:
+                    SolicitudRegistroPaciente.objects.filter(
+                        pk=solicitud_atendida_id, atendida=False
+                    ).update(atendida=True, persona_creada=persona)
+                messages.success(request, 'Paciente registrado correctamente.')
+                return redirect(reverse('dashboard_recepcionista') + '?seccion=pacientes')
+
+        elif accion == 'asignar_medico':
             cita = get_object_or_404(Cita, pk=request.POST.get('cita_id'), medico__isnull=True)
             medico = Persona.objects.filter(
                 pk=request.POST.get('medico_id'), roles__categoria=Rol.Categoria.MEDICO
@@ -343,38 +392,41 @@ def vista_administrativo(request):
                 cita.estado = Cita.Estado.CONFIRMADA
                 cita.save(update_fields=['medico', 'estado'])
                 messages.success(request, 'Cita asignada y confirmada correctamente.')
-                return redirect(reverse('dashboard_administrativo') + '?seccion=citas')
+                return redirect(reverse('dashboard_recepcionista') + '?seccion=citas')
 
-    categorias_empleado = [Rol.Categoria.ADMINISTRATIVO, Rol.Categoria.MEDICO, Rol.Categoria.ENFERMERA]
-    empleados = Persona.objects.filter(
-        roles__categoria__in=categorias_empleado
-    ).prefetch_related('roles').distinct().order_by('-fecha_creacion')
-
+    pendientes = Cita.objects.filter(
+        estado=Cita.Estado.PENDIENTE, medico__isnull=True
+    ).select_related('persona').order_by('fecha_hora')
     citas_pendientes = []
-    if es_recepcionista:
-        pendientes = Cita.objects.filter(
-            estado=Cita.Estado.PENDIENTE, medico__isnull=True
-        ).select_related('persona').order_by('fecha_hora')
-        for c in pendientes:
-            candidatos, sugerido = _sugerir_medico(c)
-            citas_pendientes.append({'cita': c, 'candidatos': candidatos, 'sugerido': sugerido})
+    for c in pendientes:
+        candidatos, sugerido = _sugerir_medico(c)
+        citas_pendientes.append({'cita': c, 'candidatos': candidatos, 'sugerido': sugerido})
+
+    solicitudes_registro = SolicitudRegistroPaciente.objects.filter(
+        atendida=False
+    ).select_related('solicitado_por').order_by('fecha_solicitud')
+
+    pacientes = Persona.objects.filter(
+        roles__categoria=Rol.Categoria.CLIENTE_PACIENTE
+    ).distinct().order_by('-fecha_creacion')
 
     ctx = {
-        'convenio_form': convenio_form,
-        'convenios': Convenio.objects.all().order_by('nombre'),
-        'empleado_form': empleado_form,
-        'empleados': empleados,
-        'es_recepcionista': es_recepcionista,
+        'paciente_form': paciente_form,
+        'pacientes': pacientes,
+        'solicitud_previa': solicitud_previa,
+        'solicitudes_registro': solicitudes_registro,
         'citas_pendientes': citas_pendientes,
         'seccion_activa': request.GET.get('seccion', 'resumen'),
     }
-    return render(request, ROLE_TEMPLATE_MAP['administrativo'], ctx)
+    return render(request, ROLE_TEMPLATE_MAP['recepcionista'], ctx)
 
 @login_required
 def vista_medico(request):
+    from django.db.models import Q
     from django.utils import timezone
 
     from pulse_sas.internal.pulse_sas.citas.models import Cita
+    from pulse_sas.internal.pulse_sas.personas.forms import SolicitudRegistroPacienteForm
     from pulse_sas.internal.pulse_sas.personas.models import HistoriaClinicaPersona, Persona, Rol
 
     if not _usuario_tiene_rol(request.user, Rol.Categoria.MEDICO):
@@ -385,6 +437,53 @@ def vista_medico(request):
         persona_medico = request.user.persona
     except Exception:
         persona_medico = None
+
+    solicitud_registro_form = SolicitudRegistroPacienteForm()
+
+    if request.method == 'POST' and persona_medico:
+        accion = request.POST.get('accion')
+
+        if accion == 'solicitar_atencion_urgente':
+            paciente = Persona.objects.filter(
+                pk=request.POST.get('paciente_id'), roles__categoria=Rol.Categoria.CLIENTE_PACIENTE
+            ).first()
+            if not paciente:
+                messages.error(request, 'Paciente no encontrado.')
+            else:
+                Cita.objects.create(
+                    persona=paciente,
+                    medico=None,
+                    estado=Cita.Estado.PENDIENTE,
+                    tipo_cita=Cita.TipoCita.URGENCIA,
+                    fecha_hora=timezone.now(),
+                    motivo=f'Urgencia solicitada por Dr(a). {persona_medico.nombre} {persona_medico.apellido}',
+                )
+                messages.success(
+                    request,
+                    f'Solicitud de atención urgente para {paciente.nombre} {paciente.apellido} '
+                    'enviada -- queda pendiente de que Recepcionista asigne médico.'
+                )
+            return redirect(reverse('dashboard_medico') + '?tab=buscar')
+
+        elif accion == 'solicitar_registro_paciente':
+            solicitud_registro_form = SolicitudRegistroPacienteForm(request.POST)
+            if solicitud_registro_form.is_valid():
+                solicitud = solicitud_registro_form.save(commit=False)
+                solicitud.solicitado_por = persona_medico
+                solicitud.save()
+                messages.success(request, 'Solicitud de registro enviada a Recepcionista.')
+                return redirect(reverse('dashboard_medico') + '?tab=buscar')
+
+    q_paciente = request.GET.get('q_paciente', '').strip()
+    resultados_busqueda = []
+    if q_paciente:
+        resultados_busqueda = Persona.objects.filter(
+            roles__categoria=Rol.Categoria.CLIENTE_PACIENTE
+        ).filter(
+            Q(nombre__icontains=q_paciente)
+            | Q(apellido__icontains=q_paciente)
+            | Q(cedula__icontains=q_paciente)
+        ).distinct().order_by('nombre', 'apellido')
 
     agenda_hoy = []
     pacientes_atendidos = []
@@ -406,7 +505,13 @@ def vista_medico(request):
             ).values_list('historia_clinica_id', flat=True),
         ).distinct().order_by('nombre', 'apellido')
 
-    ctx = {'agenda_hoy': agenda_hoy, 'pacientes_atendidos': pacientes_atendidos}
+    ctx = {
+        'agenda_hoy': agenda_hoy,
+        'pacientes_atendidos': pacientes_atendidos,
+        'q_paciente': q_paciente,
+        'resultados_busqueda': resultados_busqueda,
+        'solicitud_registro_form': solicitud_registro_form,
+    }
     return render(request, ROLE_TEMPLATE_MAP['medico'], ctx)
 
 @login_required
@@ -503,7 +608,8 @@ def vista_empresa(request):
 # declaradas arriba, se resuelve recién cuando dashboard() lo usa.
 VISTA_POR_ROL = {
     'admin':            vista_admin,
-    'administrativo':   vista_administrativo,
+    'gerente':          vista_gerente,
+    'recepcionista':    vista_recepcionista,
     'medico':           vista_medico,
     'enfermera':        vista_enfermera,
     'guardia':          vista_guardia,

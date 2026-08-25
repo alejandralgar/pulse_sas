@@ -47,7 +47,7 @@ python app.py migrate
 python app.py createsuperuser
 
 # 6. Datos demo: un usuario por rol (admin, médico, enfermera, guardia,
-#    paciente, empresa, recepcionista), password Pulsesas123 pa todos
+#    paciente, empresa, recepcionista, gerente), password Pulsesas123 pa todos
 python app.py seed_demo_data
 
 # 7. Correr el servidor
