@@ -112,9 +112,15 @@
                 Buscá por nombre, apellido o cédula a cualquier paciente del sistema --
                 útil para atender por urgencia a alguien que no es tu paciente habitual.
             </p>
-            <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-                <input type="text" name="q_paciente" value="{{ q_paciente }}" placeholder="Nombre, apellido o cédula..." style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:280px;">
-                <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+            <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+                <div style="position:relative;">
+                    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--color-muted);pointer-events:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" name="q_paciente" value="{{ q_paciente }}" placeholder="Nombre, apellido o cédula..." autofocus style="padding:6px 12px 6px 34px;border:1px solid #ccc;border-radius:6px;width:280px;">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm" style="padding:6px 12px;font-size:0.78rem;width:80px;text-align:center;justify-content:center;">Buscar</button>
+                {% if q_paciente %}
+                <a href="{% url 'dashboard_medico' %}?tab=buscar" class="btn btn-outline btn-sm" style="padding:6px 12px;font-size:0.78rem;width:80px;text-align:center;justify-content:center;">Limpiar</a>
+                {% endif %}
             </form>
 
             {% if q_paciente %}

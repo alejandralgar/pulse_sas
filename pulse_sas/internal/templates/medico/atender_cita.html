@@ -20,6 +20,8 @@
         </div>
         {% if es_edicion %}
         <a href="{% url 'historia_detalle' historia.id %}" class="btn btn-outline btn-sm">Ver historia clínica</a>
+        {% else %}
+        <a href="{% url 'dashboard_medico' %}" class="btn btn-outline btn-sm">Volver</a>
         {% endif %}
     </div>
 

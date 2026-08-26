@@ -165,6 +165,11 @@ def vista_admin(request):
         messages.error(request, 'No tienes permisos de administrador.')
         return redirect('dashboard')
 
+    try:
+        persona_admin = request.user.persona
+    except Exception:
+        persona_admin = None
+
     rol_form = RolForm()
     usuario_form = AdminRegistroUsuarioForm()
     convenio_form = ConvenioForm()
@@ -190,7 +195,7 @@ def vista_admin(request):
         elif accion == 'crear_usuario':
             usuario_form = AdminRegistroUsuarioForm(request.POST)
             if usuario_form.is_valid():
-                usuario_form.save()
+                usuario_form.save(registrado_por=persona_admin)
                 messages.success(request, 'Usuario registrado correctamente.')
                 return redirect(reverse('dashboard_admin') + '?seccion=usuarios')
 
@@ -292,6 +297,11 @@ def vista_gerente(request):
         messages.error(request, 'No tienes permisos de gerente.')
         return redirect('dashboard')
 
+    try:
+        persona_gerente = request.user.persona
+    except Exception:
+        persona_gerente = None
+
     convenio_form = ConvenioForm()
     empleado_form = EmpleadoRegistroForm()
 
@@ -308,7 +318,7 @@ def vista_gerente(request):
         elif accion == 'crear_empleado':
             empleado_form = EmpleadoRegistroForm(request.POST)
             if empleado_form.is_valid():
-                empleado_form.save()
+                empleado_form.save(registrado_por=persona_gerente)
                 messages.success(request, 'Empleado registrado correctamente.')
                 return redirect(reverse('dashboard_gerente') + '?seccion=empleados')
 
@@ -333,14 +343,20 @@ def vista_recepcionista(request):
     asignar médico a citas pendientes, y bandeja de solicitudes de
     registro que llegan desde Médico (caso de urgencia)."""
     from django.shortcuts import get_object_or_404
+    from django.utils import timezone
 
-    from pulse_sas.internal.pulse_sas.citas.models import Cita
-    from pulse_sas.internal.pulse_sas.personas.forms import PacienteRegistroForm
+    from pulse_sas.internal.pulse_sas.citas.models import Cita, CitaHistorial
+    from pulse_sas.internal.pulse_sas.personas.forms import ContactoEmergenciaForm, PacienteRegistroForm
     from pulse_sas.internal.pulse_sas.personas.models import Persona, Rol, SolicitudRegistroPaciente
 
     if not _usuario_tiene_rol(request.user, Rol.Categoria.RECEPCIONISTA):
         messages.error(request, 'No tienes permisos de recepcionista.')
         return redirect('dashboard')
+
+    try:
+        persona_recepcionista = request.user.persona
+    except Exception:
+        persona_recepcionista = None
 
     solicitud_id = request.GET.get('solicitud_id')
     solicitud_previa = None
@@ -355,19 +371,27 @@ def vista_recepcionista(request):
             'cedula': solicitud_previa.cedula,
         } if solicitud_previa else None
     )
+    contacto_form = ContactoEmergenciaForm()
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
 
         if accion == 'crear_paciente':
             paciente_form = PacienteRegistroForm(request.POST)
-            if paciente_form.is_valid():
-                persona = paciente_form.save()
+            contacto_form = ContactoEmergenciaForm(request.POST)
+            if paciente_form.is_valid() and contacto_form.is_valid():
+                persona = paciente_form.save(registrado_por=persona_recepcionista)
+                contacto = contacto_form.save(commit=False)
+                contacto.paciente = persona
+                contacto.save()
                 solicitud_atendida_id = request.POST.get('solicitud_id')
                 if solicitud_atendida_id:
                     SolicitudRegistroPaciente.objects.filter(
                         pk=solicitud_atendida_id, atendida=False
-                    ).update(atendida=True, persona_creada=persona)
+                    ).update(
+                        atendida=True, persona_creada=persona,
+                        atendida_por=persona_recepcionista, fecha_atendida=timezone.now(),
+                    )
                 messages.success(request, 'Paciente registrado correctamente.')
                 return redirect(reverse('dashboard_recepcionista') + '?seccion=pacientes')
 
@@ -391,6 +415,11 @@ def vista_recepcionista(request):
                 cita.medico = medico
                 cita.estado = Cita.Estado.CONFIRMADA
                 cita.save(update_fields=['medico', 'estado'])
+                CitaHistorial.objects.create(
+                    cita=cita, accion=CitaHistorial.Accion.ASIGNAR,
+                    usuario_responsable=persona_recepcionista,
+                    comentario=f'Asignado a {medico.nombre} {medico.apellido}',
+                )
                 messages.success(request, 'Cita asignada y confirmada correctamente.')
                 return redirect(reverse('dashboard_recepcionista') + '?seccion=citas')
 
@@ -406,16 +435,27 @@ def vista_recepcionista(request):
         atendida=False
     ).select_related('solicitado_por').order_by('fecha_solicitud')
 
+    solicitudes_atendidas = SolicitudRegistroPaciente.objects.filter(
+        atendida=True
+    ).select_related('solicitado_por', 'atendida_por').order_by('-fecha_atendida')[:50]
+
     pacientes = Persona.objects.filter(
         roles__categoria=Rol.Categoria.CLIENTE_PACIENTE
-    ).distinct().order_by('-fecha_creacion')
+    ).select_related('registrado_por', 'registrado_por__usuario').distinct().order_by('-fecha_creacion')
+
+    citas_asignadas = CitaHistorial.objects.filter(
+        accion=CitaHistorial.Accion.ASIGNAR
+    ).select_related('cita', 'cita__persona', 'cita__medico', 'usuario_responsable').order_by('-fecha_accion')[:50]
 
     ctx = {
         'paciente_form': paciente_form,
+        'contacto_form': contacto_form,
         'pacientes': pacientes,
         'solicitud_previa': solicitud_previa,
         'solicitudes_registro': solicitudes_registro,
+        'solicitudes_atendidas': solicitudes_atendidas,
         'citas_pendientes': citas_pendientes,
+        'citas_asignadas': citas_asignadas,
         'seccion_activa': request.GET.get('seccion', 'resumen'),
     }
     return render(request, ROLE_TEMPLATE_MAP['recepcionista'], ctx)
