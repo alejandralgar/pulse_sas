@@ -59,7 +59,8 @@ class Rol(models.Model):
         ADMIN = 'admin', 'Admin'
         CLIENTE_PACIENTE = 'cliente_paciente', 'Cliente / paciente'
         EMPRESA = 'empresa', 'Empresa'
-        ADMINISTRATIVO = 'administrativo', 'Administrativo'
+        GERENTE = 'gerente', 'Gerente'
+        RECEPCIONISTA = 'recepcionista', 'Recepcionista'
         MEDICO = 'medico', 'Médico'
         ENFERMERA = 'enfermera', 'Enfermera'
         GUARDIA = 'guardia', 'Guardia de seguridad'
@@ -82,6 +83,13 @@ class Persona(models.Model):
         FEMENINO = 'F', 'Femenino'
         OTRO = 'O', 'Otro'
 
+    class TipoDocumento(models.TextChoices):
+        CC = 'CC', 'Cédula de ciudadanía'
+        TI = 'TI', 'Tarjeta de identidad'
+        CE = 'CE', 'Cédula de extranjería'
+        RC = 'RC', 'Registro civil'
+        PA = 'PA', 'Pasaporte'
+
     usuario = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -91,7 +99,8 @@ class Persona(models.Model):
     )
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
-    cedula = models.CharField(max_length=20, unique=True)
+    tipo_documento = models.CharField(max_length=2, choices=TipoDocumento.choices, default=TipoDocumento.CC)
+    cedula = models.CharField('cédula / documento', max_length=20, unique=True)
     fecha_nacimiento = models.DateField()
     sexo = models.CharField(max_length=1, choices=Sexo.choices, blank=True)
     direccion = models.CharField(max_length=255, blank=True)
@@ -468,6 +477,33 @@ class Jornada(models.Model):
 
     def __str__(self):
         return f'{self.persona} - {self.fecha} ({self.get_tipo_jornada_display()})'
+
+
+class SolicitudRegistroPaciente(models.Model):
+    """Un médico encontró a alguien no registrado buscando pacientes
+    (caso de urgencia) y pide que Recepcionista lo registre."""
+
+    nombre = models.CharField(max_length=100)
+    apellido = models.CharField(max_length=100)
+    cedula = models.CharField(max_length=20, blank=True)
+    motivo = models.TextField(blank=True)
+    solicitado_por = models.ForeignKey(
+        Persona, on_delete=models.SET_NULL, null=True,
+        related_name='solicitudes_registro_hechas',
+    )
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    atendida = models.BooleanField(default=False)
+    persona_creada = models.ForeignKey(
+        Persona, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
+    )
+
+    class Meta:
+        verbose_name = 'solicitud de registro de paciente'
+        verbose_name_plural = 'solicitudes de registro de paciente'
+        ordering = ['-fecha_solicitud']
+
+    def __str__(self):
+        return f'{self.nombre} {self.apellido} (pedido por {self.solicitado_por})'
 
 
 class Convenio(models.Model):

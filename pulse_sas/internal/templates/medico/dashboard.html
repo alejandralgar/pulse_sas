@@ -3,13 +3,7 @@
 {% block title %}Médico · Pulse SAS{% endblock %}
 
 {% block sidebar %}
-<div class="sidebar-section">Atención</div>
-<nav>
-    <a href="#" id="nav-agenda" class="active" onclick="return showMainSection('agenda-container', this)">
-        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Agenda del Día
-    </a>
-</nav>
+{% include "medico/_sidebar.html" %}
 {% endblock %}
 
 {% block main %}
@@ -27,7 +21,7 @@
             <svg style="width:16px;height:16px;display:inline-block;vertical-align:-2px;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             Historia clínica
         </button>
-        <button class="tab-btn" onclick="switchInnerTab('tab-buscar', this)">
+        <button class="tab-btn" id="tab-btn-buscar" onclick="switchInnerTab('tab-buscar', this)">
             <svg style="width:16px;height:16px;display:inline-block;vertical-align:-2px;margin-right:4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             Buscar paciente
         </button>
@@ -113,8 +107,76 @@
     <!-- PESTAÑA 3 -->
     <div id="tab-buscar" class="inner-tab-content" style="display:none;">
         <div class="card">
-            <div class="card-title">Directorio de Pacientes</div>
-            <p style="color:var(--color-muted);">Función en desarrollo.</p>
+            <div class="card-title">Buscar paciente registrado</div>
+            <p style="color:var(--color-muted);margin-bottom:12px;">
+                Buscá por nombre, apellido o cédula a cualquier paciente del sistema --
+                útil para atender por urgencia a alguien que no es tu paciente habitual.
+            </p>
+            <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                <input type="text" name="q_paciente" value="{{ q_paciente }}" placeholder="Nombre, apellido o cédula..." style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:280px;">
+                <button type="submit" class="btn btn-primary btn-sm">Buscar</button>
+            </form>
+
+            {% if q_paciente %}
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Paciente</th><th>Cédula</th><th>Correo</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for paciente in resultados_busqueda %}
+                        <tr>
+                            <td>{{ paciente.nombre }} {{ paciente.apellido }}</td>
+                            <td>{{ paciente.cedula }}</td>
+                            <td>{{ paciente.correo }}</td>
+                            <td>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="solicitar_atencion_urgente">
+                                    <input type="hidden" name="paciente_id" value="{{ paciente.id }}">
+                                    <button type="submit" class="btn btn-outline btn-sm">Solicitar atención urgente</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4">No se encontró ningún paciente registrado con ese dato.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-title">¿No está en el sistema?</div>
+            <p style="color:var(--color-muted);margin-bottom:12px;">
+                Pedile a Recepcionista que lo registre -- tu solicitud le llega directo a su panel.
+            </p>
+            <form class="form-grid" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="solicitar_registro_paciente">
+                <div class="form-group">
+                    <label for="{{ solicitud_registro_form.nombre.id_for_label }}">Nombre</label>
+                    {{ solicitud_registro_form.nombre }}
+                    {% if solicitud_registro_form.nombre.errors %}
+                    <ul class="field-errors">{% for error in solicitud_registro_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ solicitud_registro_form.apellido.id_for_label }}">Apellido</label>
+                    {{ solicitud_registro_form.apellido }}
+                    {% if solicitud_registro_form.apellido.errors %}
+                    <ul class="field-errors">{% for error in solicitud_registro_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ solicitud_registro_form.cedula.id_for_label }}">Cédula (si la tenés)</label>
+                    {{ solicitud_registro_form.cedula }}
+                </div>
+                <div class="form-group form-full">
+                    <label for="{{ solicitud_registro_form.motivo.id_for_label }}">Motivo</label>
+                    {{ solicitud_registro_form.motivo }}
+                </div>
+                <div class="form-full"><button type="submit" class="btn btn-primary">Solicitar registro</button></div>
+            </form>
         </div>
     </div>
 </section>
@@ -122,15 +184,6 @@
 
 {% block extra_js %}
 <script>
-function showMainSection(id, el) {
-    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    if (el) {
-        document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
-        el.classList.add('active');
-    }
-    return false;
-}
 function switchInnerTab(tabId, btn) {
     document.querySelectorAll('.inner-tab-content').forEach(t => t.style.display = 'none');
     document.getElementById(tabId).style.display = 'block';
@@ -142,5 +195,11 @@ function filterTable(inputId, tableId) {
     const trs = document.getElementById(tableId).getElementsByTagName('tr');
     for (let i = 1; i < trs.length; i++) trs[i].style.display = trs[i].textContent.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
 }
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('tab') || params.has('q_paciente')) {
+        switchInnerTab('tab-buscar', document.getElementById('tab-btn-buscar'));
+    }
+});
 </script>
 {% endblock %}

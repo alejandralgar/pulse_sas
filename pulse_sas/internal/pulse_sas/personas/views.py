@@ -81,7 +81,7 @@ def mi_perfil(request):
 def _es_gerente(user):
     if user.is_superuser:
         return True
-    return Rol.objects.filter(nombre='gerente', personas__usuario=user).exists()
+    return Rol.objects.filter(categoria=Rol.Categoria.GERENTE, personas__usuario=user).exists()
 
 
 def _persona_con_rol_en_historia(historia, rol):

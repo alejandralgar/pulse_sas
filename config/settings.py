@@ -138,4 +138,12 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
+# Sesión: expira al cerrar el navegador y por inactividad (no sobrevive
+# indefinidamente solo porque el server siga corriendo). SESSION_SAVE_EVERY_REQUEST
+# refresca el timeout con cada request, así un usuario activo no se cae a mitad de uso.
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = config('SESSION_COOKIE_AGE', default=1800, cast=int)  # 30 min de inactividad
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_SECURE = not DEBUG
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

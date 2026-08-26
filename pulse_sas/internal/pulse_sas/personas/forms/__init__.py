@@ -5,8 +5,10 @@ from .registro import (
     AdminRegistroUsuarioForm,
     EmpleadoEditForm,
     EmpleadoRegistroForm,
+    PacienteRegistroForm,
     RolForm,
     ConvenioForm,
+    SolicitudRegistroPacienteForm,
 )
 
 __all__ = [
@@ -17,8 +19,10 @@ __all__ = [
     'AdminRegistroUsuarioForm',
     'EmpleadoEditForm',
     'EmpleadoRegistroForm',
+    'PacienteRegistroForm',
     'RolForm',
     'ConvenioForm',
+    'SolicitudRegistroPacienteForm',
     'ConsultaForm',
     'RecetaForm',
     'ItemRecetaFormSet',

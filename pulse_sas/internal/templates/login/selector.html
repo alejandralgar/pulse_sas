@@ -72,10 +72,15 @@
             Admin
             <span class="role-desc">Control total del sistema</span>
         </a>
-        <a href="{% url 'dashboard_administrativo' %}" class="role-card">
+        <a href="{% url 'dashboard_gerente' %}" class="role-card">
             <span class="role-icon">🏢</span>
-            Administrativo
-            <span class="role-desc">Gerencia · Secretaría</span>
+            Gerente
+            <span class="role-desc">Empleados · Convenios</span>
+        </a>
+        <a href="{% url 'dashboard_recepcionista' %}" class="role-card">
+            <span class="role-icon">📞</span>
+            Recepcionista
+            <span class="role-desc">Pacientes · Citas</span>
         </a>
         <a href="{% url 'dashboard_medico' %}" class="role-card">
             <span class="role-icon">🩺</span>

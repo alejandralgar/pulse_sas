@@ -1,0 +1,245 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+{% block title %}Recepcionista · Pulse SAS{% endblock %}
+
+{% block sidebar %}
+<div class="sidebar-section">Recepción</div>
+<nav>
+    <a href="#" id="nav-resumen" class="{% if seccion_activa == 'resumen' %}active{% endif %}" onclick="return showSection('resumen', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        Resumen
+    </a>
+    <a href="#" id="nav-citas" class="{% if seccion_activa == 'citas' %}active{% endif %}" onclick="return showSection('citas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Citas pendientes
+        {% if citas_pendientes %}<span class="badge badge-warning" style="margin-left:auto;">{{ citas_pendientes|length }}</span>{% endif %}
+    </a>
+    <a href="#" id="nav-pacientes" class="{% if seccion_activa == 'pacientes' %}active{% endif %}" onclick="return showSection('pacientes', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Pacientes
+    </a>
+    <a href="#" id="nav-solicitudes" class="{% if seccion_activa == 'solicitudes' %}active{% endif %}" onclick="return showSection('solicitudes', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Solicitudes de registro
+        {% if solicitudes_registro %}<span class="badge badge-warning" style="margin-left:auto;">{{ solicitudes_registro|length }}</span>{% endif %}
+    </a>
+</nav>
+{% endblock %}
+
+{% block main %}
+<section id="resumen" class="section-content">
+    <div class="page-header">
+        <h1>Panel Recepción</h1>
+        <p>Atención al paciente · Agendamiento de citas</p>
+    </div>
+    <div class="stats-grid">
+        <div class="stat-card orange"><span class="stat-label">Citas pendientes</span><span class="stat-value">{{ citas_pendientes|length }}</span></div>
+        <div class="stat-card blue"><span class="stat-label">Pacientes registrados</span><span class="stat-value">{{ pacientes|length }}</span></div>
+        <div class="stat-card purple"><span class="stat-label">Solicitudes de registro</span><span class="stat-value">{{ solicitudes_registro|length }}</span></div>
+    </div>
+    {% include "partials/calendario.html" %}
+</section>
+
+<section id="citas" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Citas pendientes</h1>
+        <p>Asigná médico a las citas que solicitaron los pacientes -- el sistema sugiere uno libre a esa hora.</p>
+    </div>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora</th><th>Asignar médico</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in citas_pendientes %}
+                    <tr>
+                        <td>{{ item.cita.persona.nombre }} {{ item.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ item.cita.persona.cedula }}</span></td>
+                        <td>{{ item.cita.get_tipo_cita_display|default:"—" }}</td>
+                        <td>{{ item.cita.motivo }}</td>
+                        <td>{{ item.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
+                        <td>
+                            {% if item.candidatos %}
+                            <form method="post" action="{% url 'dashboard_recepcionista' %}?seccion=citas" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="asignar_medico">
+                                <input type="hidden" name="cita_id" value="{{ item.cita.id }}">
+                                <select name="medico_id">
+                                    {% for c in item.candidatos %}
+                                    <option value="{{ c.persona.id }}"
+                                        {% if item.sugerido.id == c.persona.id %}selected{% endif %}
+                                        {% if c.ocupado %}disabled{% endif %}>
+                                        {{ c.persona.nombre }} {{ c.persona.apellido }}{% if c.persona.especialidad %} ({{ c.persona.especialidad }}){% endif %}{% if c.ocupado %} -- ocupado a esa hora{% elif c.en_turno %} -- en turno{% else %} -- sin jornada registrada{% endif %}{% if item.sugerido.id == c.persona.id %} ★ sugerido{% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
+                            </form>
+                            {% else %}
+                            <span class="badge badge-gray">No hay médicos registrados</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5">No hay citas pendientes por asignar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section id="pacientes" class="section-content" style="display:none;">
+    <div class="page-header"><h1>Registrar Pacientes</h1><p>Alta de pacientes nuevos en el sistema</p></div>
+    <div class="card">
+        <div class="card-title">Nuevo Paciente</div>
+        <form class="form-grid" method="post" action="{% url 'dashboard_recepcionista' %}?seccion=pacientes">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="crear_paciente">
+            {% if solicitud_previa %}<input type="hidden" name="solicitud_id" value="{{ solicitud_previa.id }}">{% endif %}
+            <div class="form-group">
+                <label for="{{ paciente_form.nombre.id_for_label }}">Nombre</label>
+                {{ paciente_form.nombre }}
+                {% if paciente_form.nombre.errors %}
+                <ul class="field-errors">{% for error in paciente_form.nombre.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.apellido.id_for_label }}">Apellido</label>
+                {{ paciente_form.apellido }}
+                {% if paciente_form.apellido.errors %}
+                <ul class="field-errors">{% for error in paciente_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.tipo_documento.id_for_label }}">Tipo de documento</label>
+                {{ paciente_form.tipo_documento }}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.cedula.id_for_label }}">Cédula</label>
+                {{ paciente_form.cedula }}
+                {% if paciente_form.cedula.errors %}
+                <ul class="field-errors">{% for error in paciente_form.cedula.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.fecha_nacimiento.id_for_label }}">Fecha de nacimiento</label>
+                {{ paciente_form.fecha_nacimiento }}
+                {% if paciente_form.fecha_nacimiento.errors %}
+                <ul class="field-errors">{% for error in paciente_form.fecha_nacimiento.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.username.id_for_label }}">Usuario</label>
+                {{ paciente_form.username }}
+                {% if paciente_form.username.errors %}
+                <ul class="field-errors">{% for error in paciente_form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.email.id_for_label }}">Correo</label>
+                {{ paciente_form.email }}
+                {% if paciente_form.email.errors %}
+                <ul class="field-errors">{% for error in paciente_form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.password1.id_for_label }}">Contraseña temporal</label>
+                {{ paciente_form.password1 }}
+                {% if paciente_form.password1.errors %}
+                <ul class="field-errors">{% for error in paciente_form.password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ paciente_form.password2.id_for_label }}">Confirmar contraseña</label>
+                {{ paciente_form.password2 }}
+                {% if paciente_form.password2.errors %}
+                <ul class="field-errors">{% for error in paciente_form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-full">
+                <label>Rol</label>
+                {{ paciente_form.roles }}
+                {% if paciente_form.roles.errors %}
+                <ul class="field-errors">{% for error in paciente_form.roles.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-full"><button type="submit" class="btn btn-primary">Registrar Paciente</button></div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;">
+            <div class="card-title" style="margin:0;">Pacientes registrados</div>
+            <input type="text" id="search-pacientes" placeholder="Buscar por documento, tipo de documento, nombre o apellido..." onkeyup="filterTable('search-pacientes', 'table-pacientes')" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;width:320px;">
+        </div>
+        <div class="table-wrap">
+            <table id="table-pacientes">
+                <thead><tr><th>Nombre</th><th>Apellido</th><th>Tipo de documento</th><th>Documento</th><th>Usuario</th><th>Correo</th><th>Registrado</th></tr></thead>
+                <tbody>
+                    {% for p in pacientes %}
+                    <tr>
+                        <td>{{ p.nombre }}</td>
+                        <td>{{ p.apellido }}</td>
+                        <td>{{ p.get_tipo_documento_display }}</td>
+                        <td>{{ p.cedula }}</td>
+                        <td>{{ p.usuario.username|default:"—" }}</td>
+                        <td>{{ p.correo }}</td>
+                        <td>{{ p.fecha_creacion|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7">Todavía no hay pacientes registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section id="solicitudes" class="section-content" style="display:none;">
+    <div class="page-header"><h1>Solicitudes de registro</h1><p>Pacientes que un médico encontró sin registrar (casos de urgencia)</p></div>
+    <div class="card">
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Nombre</th><th>Cédula</th><th>Motivo</th><th>Pedido por</th><th>Fecha</th><th>Acción</th></tr></thead>
+                <tbody>
+                    {% for s in solicitudes_registro %}
+                    <tr>
+                        <td>{{ s.nombre }} {{ s.apellido }}</td>
+                        <td>{{ s.cedula|default:"—" }}</td>
+                        <td>{{ s.motivo|default:"—" }}</td>
+                        <td>{{ s.solicitado_por.nombre }} {{ s.solicitado_por.apellido }}</td>
+                        <td>{{ s.fecha_solicitud|date:"Y-m-d H:i" }}</td>
+                        <td><a href="{% url 'dashboard_recepcionista' %}?seccion=pacientes&solicitud_id={{ s.id }}" class="btn btn-outline btn-sm">Completar registro</a></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6">No hay solicitudes pendientes.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(id, el) {
+    document.querySelectorAll('.section-content').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    return false;
+}
+function filterTable(inputId, tableId) {
+    const filter = document.getElementById(inputId).value.toLowerCase();
+    const trs = document.getElementById(tableId).getElementsByTagName('tr');
+    for (let i = 1; i < trs.length; i++) trs[i].style.display = trs[i].textContent.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const seccion = '{{ seccion_activa|default:"resumen" }}';
+    showSection(seccion, document.getElementById('nav-' + seccion));
+});
+</script>
+{% endblock %}

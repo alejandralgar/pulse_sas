@@ -216,6 +216,10 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
+                    <label for="{{ editar_form.tipo_documento.id_for_label }}">Tipo de documento</label>
+                    {{ editar_form.tipo_documento }}
+                </div>
+                <div class="form-group">
                     <label for="{{ editar_form.cedula.id_for_label }}">Cédula / Documento</label>
                     {{ editar_form.cedula }}
                     {% if editar_form.cedula.errors %}
@@ -308,6 +312,10 @@
                     {% if usuario_form.apellido.errors %}
                     <ul class="field-errors">{% for error in usuario_form.apellido.errors %}<li>{{ error }}</li>{% endfor %}</ul>
                     {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="{{ usuario_form.tipo_documento.id_for_label }}">Tipo de documento</label>
+                    {{ usuario_form.tipo_documento }}
                 </div>
                 <div class="form-group">
                     <label for="{{ usuario_form.cedula.id_for_label }}">Cédula / Documento</label>
