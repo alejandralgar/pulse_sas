@@ -13,6 +13,30 @@
         </svg>
         Solicitar Citas
     </a>
+    <a href="#" id="nav-historial"
+       onclick="return showSection('historial', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        Mi Historial clínico
+    </a>
+    <a href="#" id="nav-recetas"
+       onclick="return showSection('recetas', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L5.6 15.12a2 2 0 00-1.182.235l-.106.053A2 2 0 003.22 17.2l.092.184A10 10 0 0010.5 22h3a10 10 0 007.188-4.616l.092-.184a2 2 0 00-1.092-2.772zM12 2a4 4 0 00-4 4v3a4 4 0 008 0V6a4 4 0 00-4-4z"/>
+        </svg>
+        Recetas Médicas
+    </a>
+    <a href="#" id="nav-contactanos"
+       onclick="return showSection('contactanos', this)">
+        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+        </svg>
+        Contáctanos
+    </a>
 </nav>
 {% endblock %}
 
@@ -27,6 +51,9 @@
 {% endif %}
 
 {% include "cliente/partials/_citas.html" %}
+{% include "cliente/partials/_historial.html" %}
+{% include "cliente/partials/_recetas.html" %}
+{% include "cliente/partials/_contactanos.html" %}
 
 {# JSON de citas para el calendario — patrón seguro para JS en templates Django #}
 <script id="citas-data" type="application/json">{{ citas_calendario_json|safe }}</script>
@@ -75,6 +102,71 @@
     pointer-events: none;
     color: #94a3b8;
 }
+
+/* Modal Modificar Cita */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.modal-backdrop.open { display: flex; }
+.modal-container {
+    background: #ffffff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    animation: modalSlideIn 0.2s ease-out;
+}
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--color-border);
+    background: #f8fafc;
+    flex-shrink: 0;
+}
+.modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--color-muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+.modal-close:hover {
+    background: #e2e8f0;
+    color: var(--color-text);
+}
+.modal-body { 
+    padding: 24px; 
+    overflow-y: auto;
+    max-height: calc(90vh - 65px);
+}
 </style>
 {% endblock %}
 
@@ -98,6 +190,131 @@ function switchSubTab(tabId, el) {
     if (target) target.classList.add('active');
     if (el) el.classList.add('active');
 }
+
+function switchContactTab(tabId, el) {
+    const parent = document.getElementById('contactanos');
+    if (!parent) return;
+    parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const target = document.getElementById(tabId);
+    if (target) target.classList.add('active');
+    if (el) el.classList.add('active');
+}
+
+function abrirModalDesdeBoton(btn) {
+    if (!btn || !btn.dataset) return;
+    const d = btn.dataset;
+    abrirModalModificarCita(
+        d.id,
+        d.fecha,
+        d.hora,
+        d.tipo,
+        d.motivo || '',
+        d.tipoDisplay || d.tipo,
+        d.estadoDisplay || '',
+        d.medico || 'Pendiente por asignar'
+    );
+}
+
+function abrirModalModificarCita(id, fecha, hora, tipoCita, motivo, tipoCitaDisplay, estadoDisplay, medicoDisplay) {
+    const modal = document.getElementById('modal-modificar-cita');
+    if (!modal) return;
+
+    document.getElementById('modal-cita-id-display').textContent = id;
+    document.getElementById('modal-info-estado').textContent = estadoDisplay;
+    document.getElementById('modal-info-medico').textContent = medicoDisplay;
+
+    const formModificar = document.getElementById('form-modificar-cita');
+    formModificar.action = `/cliente/cita/${id}/modificar/`;
+
+    const formCancelar = document.getElementById('form-cancelar-cita');
+    formCancelar.action = `/cliente/cita/${id}/cancelar/`;
+
+    const inputFecha = document.getElementById('modal-fecha');
+    inputFecha.value = fecha;
+
+    const hoy = new Date();
+    const yyyy = hoy.getFullYear();
+    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dd = String(hoy.getDate()).padStart(2, '0');
+    inputFecha.min = `${yyyy}-${mm}-${dd}`;
+
+    const selectTipo = document.getElementById('modal-tipo-cita');
+    if (selectTipo) selectTipo.value = tipoCita;
+
+    const selectHora = document.getElementById('modal-hora');
+    if (selectHora) selectHora.value = hora;
+
+    const txtMotivo = document.getElementById('modal-motivo');
+    if (txtMotivo) txtMotivo.value = motivo;
+
+    actualizarHorariosModal(fecha);
+
+    modal.classList.add('open');
+}
+
+function cerrarModalModificarCita() {
+    const modal = document.getElementById('modal-modificar-cita');
+    if (modal) modal.classList.remove('open');
+}
+
+async function actualizarHorariosModal(fechaStr) {
+    const selectHora = document.getElementById('modal-hora');
+    if (!selectHora || !fechaStr) return;
+
+    try {
+        const resp = await fetch(`/cliente/cita/horarios/?fecha=${fechaStr}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const ocupados = data.ocupados || [];
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hoyStr = `${yyyy}-${mm}-${dd}`;
+        const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        Array.from(selectHora.options).forEach(opt => {
+            if (!opt.value) return;
+            const horaVal = opt.value;
+            const baseText = opt.dataset.rawText || opt.text.replace(/ \((Disponible|No disponible.*|Hora pasada.*)\)/, '');
+            opt.dataset.rawText = baseText;
+
+            const estaOcupado = ocupados.includes(horaVal);
+            const esMismoDia = (fechaStr === hoyStr);
+            const esHoraPasada = esMismoDia && (horaVal <= currentHHMM);
+
+            if (estaOcupado) {
+                opt.disabled = true;
+                opt.text = `${baseText} (No disponible)`;
+            } else if (esHoraPasada) {
+                opt.disabled = true;
+                opt.text = `${baseText} (Hora pasada)`;
+            } else {
+                opt.disabled = false;
+                opt.text = `${baseText} (Disponible)`;
+            }
+        });
+    } catch (e) {
+        console.error("Error al consultar horarios para el modal:", e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const seccion = urlParams.get('seccion');
+    if (seccion === 'contactanos') {
+        showSection('contactanos', document.getElementById('nav-contactanos'));
+    } else if (seccion === 'historial') {
+        showSection('historial', document.getElementById('nav-historial'));
+    } else if (seccion === 'recetas') {
+        showSection('recetas', document.getElementById('nav-recetas'));
+    } else if (seccion === 'miscitas') {
+        showSection('cita', document.getElementById('nav-cita'));
+        switchSubTab('subtab-miscitas', document.querySelector('.tab-btn[data-tab="subtab-miscitas"]'));
+    }
+});
 
 const citasData = JSON.parse(document.getElementById('citas-data').textContent || '[]');
 

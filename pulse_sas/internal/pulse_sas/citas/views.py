@@ -103,3 +103,119 @@ def horarios_disponibles(request):
         ocupados.append(c_local.strftime('%H:%M'))
 
     return JsonResponse({'ocupados': ocupados})
+
+
+@login_required
+def modificar_cita(request, cita_id):
+    """Permite al cliente modificar/reprogramar una cita pendiente o confirmada."""
+    from django.shortcuts import get_object_or_404
+    from django.urls import reverse
+    from .models import CitaHistorial
+
+    try:
+        persona = request.user.persona
+    except Exception:
+        messages.error(request, 'No se encontró tu perfil de paciente.')
+        return redirect('dashboard')
+
+    cita = get_object_or_404(Cita, pk=cita_id, persona=persona)
+
+    if cita.estado in [Cita.Estado.ATENDIDA, Cita.Estado.CANCELADA]:
+        messages.error(request, 'No es posible modificar una cita que ya fue atendida o cancelada.')
+        return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+    if request.method == 'POST':
+        fecha_str = request.POST.get('fecha', '').strip()
+        hora_str = request.POST.get('hora', '').strip()
+        tipo_cita = request.POST.get('tipo_cita', '').strip()
+        motivo = request.POST.get('motivo', '').strip()
+
+        if not fecha_str or not hora_str:
+            messages.error(request, 'Por favor especifica la nueva fecha y hora para la cita.')
+            return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+        try:
+            fecha_hora_naive = datetime.strptime(f"{fecha_str} {hora_str}", '%Y-%m-%d %H:%M')
+        except ValueError:
+            messages.error(request, 'Formato de fecha u hora no válido.')
+            return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+        if timezone.is_aware(timezone.now()):
+            fecha_hora = timezone.make_aware(fecha_hora_naive, timezone.get_current_timezone())
+            ahora = timezone.localtime(timezone.now())
+        else:
+            fecha_hora = fecha_hora_naive
+            ahora = datetime.now()
+
+        if fecha_hora < ahora:
+            messages.error(request, 'No puedes seleccionar una fecha u hora pasadas.')
+            return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+        ocupada = Cita.objects.filter(
+            fecha_hora=fecha_hora,
+            estado__in=[Cita.Estado.PENDIENTE, Cita.Estado.CONFIRMADA]
+        ).exclude(pk=cita.pk).exists()
+
+        if ocupada:
+            messages.error(
+                request,
+                'El horario seleccionado ya ha sido ocupado por otro paciente. Por favor selecciona otro horario.'
+            )
+            return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+        cita.fecha_hora = fecha_hora
+        if tipo_cita:
+            cita.tipo_cita = tipo_cita
+        if motivo:
+            cita.motivo = motivo
+        cita.estado = Cita.Estado.REPROGRAMADA
+        cita.save()
+
+        CitaHistorial.objects.create(
+            cita=cita,
+            accion=CitaHistorial.Accion.REPROGRAMAR,
+            usuario_responsable=persona,
+            comentario=f'Cita reprogramada por el cliente a {fecha_hora.strftime("%d/%m/%Y %H:%M")}',
+        )
+
+        messages.success(request, f'La cita #{cita.pk} ha sido reprogramada exitosamente.')
+
+    return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+
+@login_required
+def cancelar_cita(request, cita_id):
+    """Permite al cliente cancelar una cita pendiente, confirmada o reprogramada."""
+    from django.shortcuts import get_object_or_404
+    from django.urls import reverse
+    from .models import CitaHistorial
+
+    try:
+        persona = request.user.persona
+    except Exception:
+        messages.error(request, 'No se encontró tu perfil de paciente.')
+        return redirect('dashboard')
+
+    cita = get_object_or_404(Cita, pk=cita_id, persona=persona)
+
+    if cita.estado == Cita.Estado.CANCELADA:
+        messages.warning(request, 'La cita ya se encuentra cancelada.')
+        return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+    if cita.estado == Cita.Estado.ATENDIDA:
+        messages.error(request, 'No se puede cancelar una cita que ya ha sido atendida.')
+        return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
+    cita.estado = Cita.Estado.CANCELADA
+    cita.save(update_fields=['estado'])
+
+    CitaHistorial.objects.create(
+        cita=cita,
+        accion=CitaHistorial.Accion.CANCELAR,
+        usuario_responsable=persona,
+        comentario='Cita cancelada a solicitud del cliente desde la oficina virtual',
+    )
+
+    messages.success(request, f'La cita #{cita.pk} ha sido cancelada exitosamente.')
+    return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
+
