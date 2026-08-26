@@ -93,6 +93,7 @@
                             <th>Tipo</th>
                             <th>Motivo</th>
                             <th>Estado</th>
+                            <th style="text-align:center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -115,6 +116,24 @@
                                     <span class="badge badge-gray">{{ cita.estado }}</span>
                                 {% endif %}
                             </td>
+                            <td style="text-align:center;">
+                                {% if cita.estado == 'pendiente' or cita.estado == 'confirmada' or cita.estado == 'reprogramada' %}
+                                <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:4px;"
+                                        data-id="{{ cita.id }}"
+                                        data-fecha="{{ cita.fecha_hora|date:'Y-m-d' }}"
+                                        data-hora="{{ cita.fecha_hora|time:'H:i' }}"
+                                        data-tipo="{{ cita.tipo_cita }}"
+                                        data-motivo="{{ cita.motivo }}"
+                                        data-tipo-display="{{ cita.get_tipo_cita_display|default:cita.tipo_cita }}"
+                                        data-estado-display="{{ cita.get_estado_display }}"
+                                        data-medico="{% if cita.medico %}{{ cita.medico.nombre }} {{ cita.medico.apellido }}{% else %}Pendiente por asignar{% endif %}"
+                                        onclick="abrirModalDesdeBoton(this)">
+                                    ✏️ Modificar Cita
+                                </button>
+                                {% else %}
+                                <span style="color:var(--color-muted);font-size:0.85rem;">—</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -123,10 +142,101 @@
             {% else %}
             <p style="color:var(--color-muted);text-align:center;padding:24px 0;">
                 Aún no tienes citas registradas.
-                <a href="#" onclick="switchSubTab('subtab-solicitar', document.querySelector('.tab-btn[data-tab=subtab-solicitar]'))"
+                <a href="#" onclick="switchSubTab('subtab-solicitar', document.querySelector('.tab-btn[data-tab=\'subtab-solicitar\']'))"
                    style="color:var(--color-primary);font-weight:600;">Solicitar una cita</a>
             </p>
             {% endif %}
         </div>
     </div>
 </section>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MODAL: MODIFICAR / CANCELAR CITA -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="modal-modificar-cita" class="modal-backdrop">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>Modificar Cita Médica #<span id="modal-cita-id-display"></span></h3>
+            <button type="button" class="modal-close" onclick="cerrarModalModificarCita()">&times;</button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Resumen Informativo de la Cita -->
+            <div style="background:#f8fafc;border:1px solid var(--color-border);padding:14px 18px;border-radius:10px;margin-bottom:18px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.88rem;">
+                    <div><span style="color:var(--color-muted);">Estado actual:</span> <strong id="modal-info-estado" style="color:var(--color-primary);"></strong></div>
+                    <div><span style="color:var(--color-muted);">Médico asignado:</span> <strong id="modal-info-medico"></strong></div>
+                </div>
+            </div>
+
+            <!-- Formulario de Edición -->
+            <form id="form-modificar-cita" method="post" action="">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label for="modal-tipo-cita">Tipo de Cita</label>
+                    <select name="tipo_cita" id="modal-tipo-cita" required>
+                        <option value="consulta_general">Consulta general</option>
+                        <option value="control">Control</option>
+                        <option value="urgencia">Urgencia</option>
+                        <option value="especialista">Especialista</option>
+                        <option value="laboratorio">Laboratorio / Examen</option>
+                    </select>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                    <div class="form-group">
+                        <label for="modal-fecha">Nueva Fecha</label>
+                        <input type="date" name="fecha" id="modal-fecha" required onchange="actualizarHorariosModal(this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modal-hora">Nueva Hora</label>
+                        <select name="hora" id="modal-hora" required>
+                            <option value="">Seleccionar hora...</option>
+                            <option value="07:00">07:00 AM</option>
+                            <option value="08:00">08:00 AM</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom:18px;">
+                    <label for="modal-motivo">Motivo / Síntomas</label>
+                    <textarea name="motivo" id="modal-motivo" rows="3" placeholder="Describe el motivo de la cita..." style="width:100%;padding:10px;border:1.5px solid var(--color-border);border-radius:8px;font-family:inherit;font-size:0.9rem;"></textarea>
+                </div>
+
+                <div style="display:flex;gap:12px;justify-content:flex-end;margin-bottom:20px;">
+                    <button type="button" class="btn btn-outline" onclick="cerrarModalModificarCita()">Cerrar</button>
+                    <button type="submit" class="btn btn-primary" style="padding:10px 22px;">Guardar Cambios</button>
+                </div>
+            </form>
+
+            <hr style="margin:20px 0;border:none;border-top:1px solid var(--color-border);">
+
+            <!-- Sección: Cancelar Cita -->
+            <div style="background:#fff5f5;border:1.5px solid #fca5a5;padding:16px 20px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;box-shadow:0 2px 6px rgba(220,38,38,0.06);">
+                <div style="flex:1;min-width:200px;">
+                    <div style="font-weight:700;color:#991b1b;font-size:0.92rem;display:flex;align-items:center;gap:6px;">
+                        <span>⚠️</span> ¿Prefieres cancelar la cita?
+                    </div>
+                    <div style="font-size:0.82rem;color:#b91c1c;margin-top:3px;line-height:1.4;">
+                        Si ya no necesitas esta atención médica, puedes anularla en cualquier momento.
+                    </div>
+                </div>
+                <form id="form-cancelar-cita" method="post" action="" onsubmit="return confirm('¿Estás seguro de que deseas cancelar esta cita médica? Esta acción no se puede deshacer.');" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="background:#dc2626;color:white;border:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:0.88rem;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 4px rgba(220,38,38,0.25);transition:background 0.15s;">
+                        🚫 Cancelar Cita
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
