@@ -75,7 +75,7 @@ class _RegistroUsuarioBaseForm(forms.Form):
         return cleaned
 
     @transaction.atomic
-    def save(self):
+    def save(self, registrado_por=None):
         user = User.objects.create_user(
             username=self.cleaned_data['username'],
             email=self.cleaned_data['email'],
@@ -89,6 +89,7 @@ class _RegistroUsuarioBaseForm(forms.Form):
             cedula=self.cleaned_data['cedula'],
             fecha_nacimiento=self.cleaned_data['fecha_nacimiento'],
             correo=self.cleaned_data['email'],
+            registrado_por=registrado_por,
             especialidad=self.cleaned_data['especialidad'],
         )
         persona.roles.set(self.cleaned_data['roles'])

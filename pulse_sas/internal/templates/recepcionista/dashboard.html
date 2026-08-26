@@ -45,46 +45,82 @@
         <h1>Citas pendientes</h1>
         <p>Asigná médico a las citas que solicitaron los pacientes -- el sistema sugiere uno libre a esa hora.</p>
     </div>
-    <div class="card">
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora</th><th>Asignar médico</th></tr>
-                </thead>
-                <tbody>
-                    {% for item in citas_pendientes %}
-                    <tr>
-                        <td>{{ item.cita.persona.nombre }} {{ item.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ item.cita.persona.cedula }}</span></td>
-                        <td>{{ item.cita.get_tipo_cita_display|default:"—" }}</td>
-                        <td>{{ item.cita.motivo }}</td>
-                        <td>{{ item.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
-                        <td>
-                            {% if item.candidatos %}
-                            <form method="post" action="{% url 'dashboard_recepcionista' %}?seccion=citas" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                                {% csrf_token %}
-                                <input type="hidden" name="accion" value="asignar_medico">
-                                <input type="hidden" name="cita_id" value="{{ item.cita.id }}">
-                                <select name="medico_id">
-                                    {% for c in item.candidatos %}
-                                    <option value="{{ c.persona.id }}"
-                                        {% if item.sugerido.id == c.persona.id %}selected{% endif %}
-                                        {% if c.ocupado %}disabled{% endif %}>
-                                        {{ c.persona.nombre }} {{ c.persona.apellido }}{% if c.persona.especialidad %} ({{ c.persona.especialidad }}){% endif %}{% if c.ocupado %} -- ocupado a esa hora{% elif c.en_turno %} -- en turno{% else %} -- sin jornada registrada{% endif %}{% if item.sugerido.id == c.persona.id %} ★ sugerido{% endif %}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
-                            </form>
-                            {% else %}
-                            <span class="badge badge-gray">No hay médicos registrados</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="5">No hay citas pendientes por asignar.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchInnerTab('tab-citas-pendientes', this)">Pendientes</button>
+        <button class="tab-btn" onclick="switchInnerTab('tab-citas-auditoria', this)">Auditoría</button>
+    </div>
+
+    <div id="tab-citas-pendientes" class="inner-tab-content">
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora</th><th>Asignar médico</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in citas_pendientes %}
+                        <tr>
+                            <td>{{ item.cita.persona.nombre }} {{ item.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ item.cita.persona.cedula }}</span></td>
+                            <td>{{ item.cita.get_tipo_cita_display|default:"—" }}</td>
+                            <td>{{ item.cita.motivo }}</td>
+                            <td>{{ item.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {% if item.candidatos %}
+                                <form method="post" action="{% url 'dashboard_recepcionista' %}?seccion=citas" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="accion" value="asignar_medico">
+                                    <input type="hidden" name="cita_id" value="{{ item.cita.id }}">
+                                    <select name="medico_id">
+                                        {% for c in item.candidatos %}
+                                        <option value="{{ c.persona.id }}"
+                                            {% if item.sugerido.id == c.persona.id %}selected{% endif %}
+                                            {% if c.ocupado %}disabled{% endif %}>
+                                            {{ c.persona.nombre }} {{ c.persona.apellido }}{% if c.persona.especialidad %} ({{ c.persona.especialidad }}){% endif %}{% if c.ocupado %} -- ocupado a esa hora{% elif c.en_turno %} -- en turno{% else %} -- sin jornada registrada{% endif %}{% if item.sugerido.id == c.persona.id %} ★ sugerido{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">Confirmar</button>
+                                </form>
+                                {% else %}
+                                <span class="badge badge-gray">No hay médicos registrados</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">No hay citas pendientes por asignar.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-citas-auditoria" class="inner-tab-content" style="display:none;">
+        <div class="card">
+            <div class="card-title">Citas asignadas -- auditoría (últimas 50)</div>
+            <p style="color:var(--color-muted);margin-bottom:12px;">Qué médico se asignó a cada cita y quién de Recepción hizo la asignación.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr><th>Paciente</th><th>Tipo de cita</th><th>Motivo</th><th>Fecha y hora de la cita</th><th>Médico asignado</th><th>Asignado por</th><th>Fecha de asignación</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for h in citas_asignadas %}
+                        <tr>
+                            <td>{{ h.cita.persona.nombre }} {{ h.cita.persona.apellido }}<br><span style="color:var(--color-muted);font-size:0.78rem;">C.C. {{ h.cita.persona.cedula }}</span></td>
+                            <td>{{ h.cita.get_tipo_cita_display|default:"—" }}</td>
+                            <td>{{ h.cita.motivo }}</td>
+                            <td>{{ h.cita.fecha_hora|date:"Y-m-d H:i" }}</td>
+                            <td>{{ h.cita.medico.nombre|default:"—" }} {{ h.cita.medico.apellido }}</td>
+                            <td>{{ h.usuario_responsable.nombre|default:"—" }} {{ h.usuario_responsable.apellido }}</td>
+                            <td>{{ h.fecha_accion|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7">Todavía no hay citas asignadas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
@@ -164,6 +200,18 @@
                 <ul class="field-errors">{% for error in paciente_form.roles.errors %}<li>{{ error }}</li>{% endfor %}</ul>
                 {% endif %}
             </div>
+
+            <div class="form-full" style="margin-top:8px;padding-top:16px;border-top:1px solid #e2e8f0;">
+                <div class="card-title" style="margin:0 0 4px;">Contacto de emergencia / acompañante</div>
+            </div>
+            {% for field in contacto_form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<ul class="field-errors">{% for error in field.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            {% endfor %}
+
             <div class="form-full"><button type="submit" class="btn btn-primary">Registrar Paciente</button></div>
         </form>
     </div>
@@ -175,7 +223,7 @@
         </div>
         <div class="table-wrap">
             <table id="table-pacientes">
-                <thead><tr><th>Nombre</th><th>Apellido</th><th>Tipo de documento</th><th>Documento</th><th>Usuario</th><th>Correo</th><th>Registrado</th></tr></thead>
+                <thead><tr><th>Nombre</th><th>Apellido</th><th>Tipo de documento</th><th>Documento</th><th>Usuario</th><th>Correo</th><th>Registrado</th><th>Registrado por</th></tr></thead>
                 <tbody>
                     {% for p in pacientes %}
                     <tr>
@@ -186,9 +234,10 @@
                         <td>{{ p.usuario.username|default:"—" }}</td>
                         <td>{{ p.correo }}</td>
                         <td>{{ p.fecha_creacion|date:"Y-m-d H:i" }}</td>
+                        <td>{% if p.registrado_por %}{{ p.registrado_por.nombre }} {{ p.registrado_por.apellido }} ({{ p.registrado_por.usuario.username|default:"—" }}){% else %}—{% endif %}</td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7">Todavía no hay pacientes registrados.</td></tr>
+                    <tr><td colspan="8">Todavía no hay pacientes registrados.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -198,25 +247,57 @@
 
 <section id="solicitudes" class="section-content" style="display:none;">
     <div class="page-header"><h1>Solicitudes de registro</h1><p>Pacientes que un médico encontró sin registrar (casos de urgencia)</p></div>
-    <div class="card">
-        <div class="table-wrap">
-            <table>
-                <thead><tr><th>Nombre</th><th>Cédula</th><th>Motivo</th><th>Pedido por</th><th>Fecha</th><th>Acción</th></tr></thead>
-                <tbody>
-                    {% for s in solicitudes_registro %}
-                    <tr>
-                        <td>{{ s.nombre }} {{ s.apellido }}</td>
-                        <td>{{ s.cedula|default:"—" }}</td>
-                        <td>{{ s.motivo|default:"—" }}</td>
-                        <td>{{ s.solicitado_por.nombre }} {{ s.solicitado_por.apellido }}</td>
-                        <td>{{ s.fecha_solicitud|date:"Y-m-d H:i" }}</td>
-                        <td><a href="{% url 'dashboard_recepcionista' %}?seccion=pacientes&solicitud_id={{ s.id }}" class="btn btn-outline btn-sm">Completar registro</a></td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="6">No hay solicitudes pendientes.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchInnerTab('tab-solicitudes-pendientes', this)">Pendientes</button>
+        <button class="tab-btn" onclick="switchInnerTab('tab-solicitudes-auditoria', this)">Auditoría</button>
+    </div>
+
+    <div id="tab-solicitudes-pendientes" class="inner-tab-content">
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nombre</th><th>Cédula</th><th>Motivo</th><th>Pedido por</th><th>Fecha</th><th>Acción</th></tr></thead>
+                    <tbody>
+                        {% for s in solicitudes_registro %}
+                        <tr>
+                            <td>{{ s.nombre }} {{ s.apellido }}</td>
+                            <td>{{ s.cedula|default:"—" }}</td>
+                            <td>{{ s.motivo|default:"—" }}</td>
+                            <td>{{ s.solicitado_por.nombre }} {{ s.solicitado_por.apellido }}</td>
+                            <td>{{ s.fecha_solicitud|date:"Y-m-d H:i" }}</td>
+                            <td><a href="{% url 'dashboard_recepcionista' %}?seccion=pacientes&solicitud_id={{ s.id }}" class="btn btn-outline btn-sm">Completar registro</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6">No hay solicitudes pendientes.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-solicitudes-auditoria" class="inner-tab-content" style="display:none;">
+        <div class="card">
+            <div class="card-title">Solicitudes atendidas -- auditoría (últimas 50)</div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Nombre</th><th>Cédula</th><th>Pedido por</th><th>Fecha pedido</th><th>Atendido por</th><th>Fecha atención</th></tr></thead>
+                    <tbody>
+                        {% for s in solicitudes_atendidas %}
+                        <tr>
+                            <td>{{ s.nombre }} {{ s.apellido }}</td>
+                            <td>{{ s.cedula|default:"—" }}</td>
+                            <td>{{ s.solicitado_por.nombre|default:"—" }} {{ s.solicitado_por.apellido }}</td>
+                            <td>{{ s.fecha_solicitud|date:"Y-m-d H:i" }}</td>
+                            <td>{{ s.atendida_por.nombre|default:"—" }} {{ s.atendida_por.apellido }}</td>
+                            <td>{{ s.fecha_atendida|date:"Y-m-d H:i"|default:"—" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6">Todavía no hay solicitudes atendidas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </section>
@@ -235,6 +316,13 @@ function filterTable(inputId, tableId) {
     const filter = document.getElementById(inputId).value.toLowerCase();
     const trs = document.getElementById(tableId).getElementsByTagName('tr');
     for (let i = 1; i < trs.length; i++) trs[i].style.display = trs[i].textContent.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
+}
+function switchInnerTab(tabId, btn) {
+    const tabs = btn.closest('.section-content').querySelectorAll('.inner-tab-content');
+    tabs.forEach(t => t.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
+    btn.closest('.tabs').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

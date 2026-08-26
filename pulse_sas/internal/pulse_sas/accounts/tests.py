@@ -287,9 +287,13 @@ class VistaRecepcionistaTests(TestCase):
             'nombre': 'Nuevo', 'apellido': 'Paciente', 'tipo_documento': 'CC', 'cedula': '6000000009',
             'fecha_nacimiento': '1990-01-01', 'especialidad': '',
             'roles': [rol_paciente.id],
+            'nombre_completo': 'Contacto Emergencia', 'telefono': '3001234567', 'parentesco': 'Madre',
         })
         self.assertEqual(resp.status_code, 302)
         self.assertTrue(Persona.objects.filter(cedula='6000000009').exists())
+        persona = Persona.objects.get(cedula='6000000009')
+        self.assertTrue(persona.contactos_emergencia.filter(nombre_completo='Contacto Emergencia').exists())
+        self.assertEqual(persona.registrado_por_id, self.persona.id)
 
     def test_gerente_no_puede_registrar_paciente(self):
         rol_gerente = Rol.objects.get_or_create(

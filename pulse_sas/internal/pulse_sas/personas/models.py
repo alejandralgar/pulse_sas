@@ -143,6 +143,10 @@ class Persona(models.Model):
         help_text='Solo aplica a personas con rol médico.',
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    registrado_por = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='registros_realizados', verbose_name='registrado por',
+    )
 
     class Meta:
         verbose_name = 'persona'
@@ -493,6 +497,11 @@ class SolicitudRegistroPaciente(models.Model):
     )
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
     atendida = models.BooleanField(default=False)
+    atendida_por = models.ForeignKey(
+        Persona, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='solicitudes_registro_atendidas',
+    )
+    fecha_atendida = models.DateTimeField(null=True, blank=True)
     persona_creada = models.ForeignKey(
         Persona, on_delete=models.SET_NULL, null=True, blank=True, related_name='+'
     )

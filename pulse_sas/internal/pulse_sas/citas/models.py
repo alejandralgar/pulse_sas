@@ -49,6 +49,7 @@ class CitaHistorial(models.Model):
         RESERVAR = 'reservar', 'Reservar'
         CANCELAR = 'cancelar', 'Cancelar'
         REPROGRAMAR = 'reprogramar', 'Reprogramar'
+        ASIGNAR = 'asignar', 'Asignar médico'
 
     cita = models.ForeignKey(Cita, on_delete=models.CASCADE, related_name='historial')
     accion = models.CharField(max_length=20, choices=Accion.choices)
