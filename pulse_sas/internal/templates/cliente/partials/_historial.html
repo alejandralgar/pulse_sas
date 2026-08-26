@@ -1,0 +1,117 @@
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECCIÓN: MI HISTORIAL CLÍNICO                                   -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="historial" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Mi Historial Clínico</h1>
+        <p>Registro completo de tus atenciones médicas, diagnósticos y tratamientos recibidos en Pulse SAS</p>
+    </div>
+
+    {% if historias_clinicas %}
+    <div style="display:flex;flex-direction:column;gap:20px;">
+        {% for historia in historias_clinicas %}
+        <div class="card" style="border-left: 4px solid var(--color-primary);padding: 20px;">
+            <!-- Encabezado de la atención -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--color-border);padding-bottom:14px;margin-bottom:16px;">
+                <div>
+                    <h3 style="margin:0;font-size:1.1rem;font-weight:700;color:var(--color-text);">
+                        Atención Médica #{{ historia.id }}
+                    </h3>
+                    <div style="font-size:0.85rem;color:var(--color-muted);margin-top:4px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                        <span>📅 <strong>Fecha:</strong> {{ historia.fecha_ingreso_paciente|date:"d/m/Y h:i A" }}</span>
+                        <span>👨‍⚕️ <strong>Médico:</strong> 
+                            {% if historia.medico_tratante %}
+                                Dr(a). {{ historia.medico_tratante.nombre }} {{ historia.medico_tratante.apellido }}
+                                {% if historia.medico_tratante.especialidad %} ({{ historia.medico_tratante.especialidad }}){% endif %}
+                            {% else %}
+                                <em>No asignado / Registro general</em>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% if historia.receta %}
+                <button type="button" class="btn btn-outline btn-sm" onclick="showSection('recetas', document.getElementById('nav-recetas'))">
+                    💊 Ver Receta Médica
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Detalles de la consulta en cuadrícula -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px;">
+
+                <!-- Motivo de Consulta -->
+                <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+                        Motivo de Consulta
+                    </div>
+                    <div style="font-size:0.9rem;color:var(--color-text);line-height:1.4;">
+                        {{ historia.motivo_consulta.descripcion|default:"No especificado" }}
+                    </div>
+                </div>
+
+                <!-- Diagnóstico -->
+                <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+                        Diagnóstico
+                    </div>
+                    <div style="font-size:0.9rem;color:var(--color-text);line-height:1.4;">
+                        {% if historia.diagnostico.diagnostico_confirmado %}
+                            <strong>Confirmado:</strong> {{ historia.diagnostico.diagnostico_confirmado }}
+                        {% elif historia.diagnostico.impresion_diagnostica %}
+                            <strong>Impresión:</strong> {{ historia.diagnostico.impresion_diagnostica }}
+                        {% else %}
+                            En evaluación médica
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tratamiento Indicado -->
+                <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+                        Tratamiento & Manejo
+                    </div>
+                    <div style="font-size:0.9rem;color:var(--color-text);line-height:1.4;">
+                        {{ historia.tratamiento|default:historia.plan_de_manejo.tratamiento_indicado|default:"Según indicaciones médicas" }}
+                    </div>
+                </div>
+
+                <!-- Signos Vitales / Examen -->
+                {% if historia.examen_fisico.presion_arterial or historia.examen_fisico.frecuencia_cardiaca %}
+                <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid #e2e8f0;">
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--color-primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+                        Examen Físico
+                    </div>
+                    <div style="font-size:0.88rem;color:var(--color-text);line-height:1.4;">
+                        {% if historia.examen_fisico.presion_arterial %}
+                            <div><strong>Presión arterial:</strong> {{ historia.examen_fisico.presion_arterial }}</div>
+                        {% endif %}
+                        {% if historia.examen_fisico.frecuencia_cardiaca %}
+                            <div><strong>Frecuencia cardíaca:</strong> {{ historia.examen_fisico.frecuencia_cardiaca }} lpm</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Recomendaciones adicionales del médico -->
+            {% if historia.plan_de_manejo.recomendaciones %}
+            <div style="margin-top:14px;background:#eff6ff;border:1px solid #bfdbfe;padding:12px 16px;border-radius:8px;font-size:0.88rem;color:#1e40af;">
+                💡 <strong>Recomendaciones del Médico:</strong> {{ historia.plan_de_manejo.recomendaciones }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center;padding:40px 20px;">
+        <div style="font-size:2.5rem;margin-bottom:12px;">📋</div>
+        <h3 style="font-size:1.1rem;font-weight:700;color:var(--color-text);margin-bottom:6px;">No se encontraron registros de historia clínica</h3>
+        <p style="font-size:0.9rem;color:var(--color-muted);max-width:500px;margin:0 auto 16px auto;">
+            Aún no tienes atenciones médicas registradas. Cuando asistas a tus citas, las anotaciones y diagnósticos del médico aparecerán automáticamente aquí.
+        </p>
+        <a href="#" onclick="showSection('cita', document.getElementById('nav-cita')); switchSubTab('subtab-solicitar', document.querySelector('.tab-btn[data-tab=\'subtab-solicitar\']')); return false;" class="btn btn-primary">
+            📅 Solicitar una Cita Médica
+        </a>
+    </div>
+    {% endif %}
+</section>

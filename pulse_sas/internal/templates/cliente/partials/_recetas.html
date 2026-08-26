@@ -1,0 +1,138 @@
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SECCIÓN: RECETAS MÉDICAS                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<section id="recetas" class="section-content" style="display:none;">
+    <div class="page-header">
+        <h1>Mis Recetas Médicas</h1>
+        <p>Fórmulas médicas autorizadas, medicamentos prescritos y droguerías en convenio para reclamarlos o adquirirlos</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr;gap:24px;">
+
+        <!-- Listado de Recetas Prescritas -->
+        {% if recetas %}
+            <div style="display:flex;flex-direction:column;gap:20px;">
+                {% for receta in recetas %}
+                <div class="card" style="border-top:4px solid #2563eb;padding:22px;">
+                    <!-- Cabecera de la receta -->
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;border-bottom:1px solid var(--color-border);padding-bottom:14px;margin-bottom:16px;">
+                        <div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <span class="badge badge-info" style="font-size:0.85rem;padding:4px 10px;">Receta #{{ receta.id }}</span>
+                                <span style="font-size:0.88rem;color:var(--color-muted);">
+                                    📅 <strong>Fecha y Hora de Emisión:</strong> {{ receta.fecha_emision|default:receta.historia_clinica.fecha_ingreso_paciente|date:"d/m/Y h:i A" }}
+                                </span>
+                            </div>
+                            <div style="font-size:0.95rem;color:var(--color-text);margin-top:8px;font-weight:600;">
+                                👨‍⚕️ <strong>Médico que atendió:</strong> 
+                                {% if receta.medico_tratante %}
+                                    Dr(a). {{ receta.medico_tratante.nombre }} {{ receta.medico_tratante.apellido }}
+                                    {% if receta.medico_tratante.especialidad %}<span style="font-weight:normal;color:var(--color-muted);">({{ receta.medico_tratante.especialidad }})</span>{% endif %}
+                                {% else %}
+                                    <em>Médico asignado a la consulta #{{ receta.historia_clinica.id }}</em>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medicamentos Prescritos -->
+                    <div style="margin-bottom:16px;">
+                        <h4 style="margin:0 0 10px 0;font-size:0.95rem;font-weight:700;color:var(--color-text);">
+                            💊 Medicamentos Recetados:
+                        </h4>
+
+                        {% if receta.medicamentos.all %}
+                        <div class="table-wrap">
+                            <table style="width:100%;">
+                                <thead>
+                                    <tr style="background:#f8fafc;">
+                                        <th>Medicamento</th>
+                                        <th>Dosis</th>
+                                        <th>Frecuencia</th>
+                                        <th>Duración</th>
+                                        <th>Indicaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in receta.medicamentos.all %}
+                                    <tr>
+                                        <td style="font-weight:600;color:var(--color-primary);">{{ item.medicamento }}</td>
+                                        <td>{{ item.dosis|default:"—" }}</td>
+                                        <td>{{ item.frecuencia|default:"—" }}</td>
+                                        <td>{{ item.duracion|default:"—" }}</td>
+                                        <td>{{ item.indicaciones|default:"—" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div style="background:#f8fafc;padding:12px;border-radius:8px;font-size:0.88rem;color:var(--color-muted);">
+                            Sin medicamentos detallados en formato individual. Consultar indicaciones generales.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Indicaciones Generales -->
+                    {% if receta.indicaciones_generales %}
+                    <div style="background:#f0f9ff;border:1px solid #bae6fd;padding:12px 16px;border-radius:8px;font-size:0.88rem;color:#0369a1;">
+                        📝 <strong>Indicaciones Generales del Médico:</strong> {{ receta.indicaciones_generales }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="text-align:center;padding:36px 20px;">
+                <div style="font-size:2.5rem;margin-bottom:10px;">💊</div>
+                <h3 style="font-size:1.1rem;font-weight:700;color:var(--color-text);margin-bottom:6px;">No tienes recetas médicas registradas</h3>
+                <p style="font-size:0.9rem;color:var(--color-muted);max-width:480px;margin:0 auto;">
+                    Cuando asistas a tus consultas médicas y el profesional prescriba medicamentos o fórmula médica, aparecerán detallados aquí.
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- SECCIÓN DESTACADA: Droguerías y Farmacias en Convenio -->
+        <div class="card" style="background:#faf5ff;border:1.5px solid #d8b4fe;padding:22px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <span style="font-size:1.6rem;">🏪</span>
+                <div>
+                    <h3 style="margin:0;font-size:1.1rem;font-weight:700;color:#6b21a8;">
+                        Droguerías y Farmacias Autorizadas (Convenios Pulse SAS)
+                    </h3>
+                    <p style="margin:2px 0 0 0;font-size:0.85rem;color:#7e22ce;">
+                        Puedes presentar tu cédula y fórmula médica en cualquiera de los siguientes puntos y redes de atención autorizadas:
+                    </p>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-top:16px;">
+                {% for drogueria in droguerias_convenio %}
+                <div style="background:#ffffff;border:1px solid #e9d5ff;padding:14px;border-radius:10px;box-shadow:0 1px 3px rgba(107,33,168,0.05);">
+                    <div style="font-weight:700;color:#581c87;font-size:0.92rem;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+                        <span>🏬</span> {{ drogueria.nombre }}
+                    </div>
+                    {% if drogueria.nit %}
+                    <div style="font-size:0.78rem;color:var(--color-muted);margin-bottom:4px;">
+                        <strong>NIT:</strong> {{ drogueria.nit }}
+                    </div>
+                    {% endif %}
+                    <div style="font-size:0.83rem;color:var(--color-text);margin-bottom:4px;">
+                        <strong>Servicio:</strong> {{ drogueria.especialidad }}
+                    </div>
+                    {% if drogueria.telefono %}
+                    <div style="font-size:0.83rem;color:#6b21a8;">
+                        📞 <strong>Teléfono / Línea:</strong> {{ drogueria.telefono }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="margin-top:16px;background:#f3e8ff;padding:10px 14px;border-radius:8px;font-size:0.82rem;color:#6b21a8;display:flex;align-items:center;gap:8px;">
+                <span>ℹ️</span> <em>Nota: Para reclamos de medicamentos formulados por EPS/IPS en convenio, presenta tu documento de identidad en caja.</em>
+            </div>
+        </div>
+
+    </div>
+</section>
