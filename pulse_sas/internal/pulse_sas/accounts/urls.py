@@ -3,7 +3,8 @@ from django.urls import path
 
 from . import views
 from pulse_sas.internal.pulse_sas.personas import views as personas_views
-from pulse_sas.internal.pulse_sas.citas import views as citas_views
+from pulse_sas.internal.pulse_sas.medico import views_historia_clinica as medico_hc_views
+from pulse_sas.internal.pulse_sas.cliente import views_citas as cliente_citas_views
 
 urlpatterns = [
     path('',                    views.landing_view,       name='home'),
@@ -49,16 +50,16 @@ urlpatterns = [
     path('dashboard/empresa/',        views.vista_empresa,       name='dashboard_empresa'),
 
     # ── Cliente / Paciente ──────────────────────────────────────────
-    path('cliente/cita/solicitar/',            citas_views.solicitar_cita,       name='cliente_solicitar_cita'),
-    path('cliente/cita/horarios/',             citas_views.horarios_disponibles, name='cliente_horarios'),
-    path('cliente/cita/<int:cita_id>/modificar/', citas_views.modificar_cita,     name='cliente_modificar_cita'),
-    path('cliente/cita/<int:cita_id>/cancelar/',  citas_views.cancelar_cita,      name='cliente_cancelar_cita'),
+    path('cliente/cita/solicitar/',            cliente_citas_views.solicitar_cita,       name='cliente_solicitar_cita'),
+    path('cliente/cita/horarios/',             cliente_citas_views.horarios_disponibles, name='cliente_horarios'),
+    path('cliente/cita/<int:cita_id>/modificar/', cliente_citas_views.modificar_cita,     name='cliente_modificar_cita'),
+    path('cliente/cita/<int:cita_id>/cancelar/',  cliente_citas_views.cancelar_cita,      name='cliente_cancelar_cita'),
 
     # ── Historia clínica / receta ("epicrisis") ──────────────────────
-    path('medico/cita/<int:cita_id>/atender/',        personas_views.atender_cita,      name='atender_cita'),
-    path('medico/cita/<int:cita_id>/disponibilidad-proxima-cita/', personas_views.disponibilidad_proxima_cita, name='disponibilidad_proxima_cita'),
-    path('medico/paciente/<int:persona_id>/historias/', personas_views.historia_paciente, name='historia_paciente'),
-    path('medico/historia/<int:historia_id>/',        personas_views.historia_detalle,  name='historia_detalle'),
-    path('medico/historia/<int:historia_id>/editar/', personas_views.editar_historia,   name='editar_historia'),
-    path('medico/historia/<int:historia_id>/receta/', personas_views.receta_view,       name='ver_receta'),
+    path('medico/cita/<int:cita_id>/atender/',        medico_hc_views.atender_cita,      name='atender_cita'),
+    path('medico/cita/<int:cita_id>/disponibilidad-proxima-cita/', medico_hc_views.disponibilidad_proxima_cita, name='disponibilidad_proxima_cita'),
+    path('medico/paciente/<int:persona_id>/historias/', medico_hc_views.historia_paciente, name='historia_paciente'),
+    path('medico/historia/<int:historia_id>/',        medico_hc_views.historia_detalle,  name='historia_detalle'),
+    path('medico/historia/<int:historia_id>/editar/', medico_hc_views.editar_historia,   name='editar_historia'),
+    path('medico/historia/<int:historia_id>/receta/', medico_hc_views.receta_view,       name='ver_receta'),
 ]

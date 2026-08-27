@@ -4,9 +4,8 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.utils import timezone
 
+from pulse_sas.internal.pulse_sas.citas.models import Cita
 from pulse_sas.internal.pulse_sas.personas.models import Persona
-
-from .models import Cita
 
 
 def _crear_paciente(*, username, cedula, password='x12345678'):
@@ -18,7 +17,7 @@ def _crear_paciente(*, username, cedula, password='x12345678'):
 
 
 class SolicitarCitaFormTests(TestCase):
-    """Cubre `SolicitarCitaForm` / `citas/views.py::solicitar_cita` --
+    """Cubre `SolicitarCitaForm` / `cliente/views_citas.py::solicitar_cita` --
     único formulario real que tiene el Paciente para pedir cita."""
 
     def setUp(self):
@@ -71,8 +70,8 @@ class SolicitarCitaFormTests(TestCase):
 
 
 class HorariosDisponiblesViewTests(TestCase):
-    """Cubre `citas/views.py::horarios_disponibles`, el endpoint JSON que
-    usa el calendario de "Solicitar Cita" del paciente."""
+    """Cubre `cliente/views_citas.py::horarios_disponibles`, el endpoint JSON
+    que usa el calendario de "Solicitar Cita" del paciente."""
 
     def setUp(self):
         self.paciente = _crear_paciente(username='paciente_horarios', cedula='7000000003')
