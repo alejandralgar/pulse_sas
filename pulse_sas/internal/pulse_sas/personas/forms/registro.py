@@ -2,25 +2,14 @@ from django import forms
 from django.contrib.auth.models import User
 from django.db import transaction
 
-from ..models import Convenio, Persona, Rol, SolicitudRegistroPaciente
-
-EMPLEADO_CATEGORIAS = [
-    Rol.Categoria.GERENTE, Rol.Categoria.RECEPCIONISTA,
-    Rol.Categoria.MEDICO, Rol.Categoria.ENFERMERA, Rol.Categoria.GUARDIA,
-]
-
-
-class RolForm(forms.ModelForm):
-    class Meta:
-        model = Rol
-        fields = ['nombre', 'categoria']
+from ..models import Convenio, Persona, Rol
 
 
 class _RegistroUsuarioBaseForm(forms.Form):
     """Campos comunes para crear un `User` + `Persona` con rol(es)
     asignados. Subclases fijan `roles_queryset` para acotar qué roles
-    puede asignar cada actor (Admin: todos; Administrativo: solo roles de
-    empleado)."""
+    puede asignar cada actor (Admin: todos; Gerente: solo roles de
+    empleado; Recepcionista: solo paciente)."""
 
     roles_queryset = Rol.objects.all()
 
@@ -75,7 +64,7 @@ class _RegistroUsuarioBaseForm(forms.Form):
         return cleaned
 
     @transaction.atomic
-    def save(self):
+    def save(self, registrado_por=None):
         user = User.objects.create_user(
             username=self.cleaned_data['username'],
             email=self.cleaned_data['email'],
@@ -89,29 +78,11 @@ class _RegistroUsuarioBaseForm(forms.Form):
             cedula=self.cleaned_data['cedula'],
             fecha_nacimiento=self.cleaned_data['fecha_nacimiento'],
             correo=self.cleaned_data['email'],
+            registrado_por=registrado_por,
             especialidad=self.cleaned_data['especialidad'],
         )
         persona.roles.set(self.cleaned_data['roles'])
         return persona
-
-
-class AdminRegistroUsuarioForm(_RegistroUsuarioBaseForm):
-    """R002 — Admin registra cualquier usuario (incluye otros admins)."""
-
-    roles_queryset = Rol.objects.all()
-
-
-class EmpleadoRegistroForm(_RegistroUsuarioBaseForm):
-    """R003 — Administrativo registra empleados: médico, enfermera,
-    gerencia. No puede crear Admin ni Paciente desde acá."""
-
-    roles_queryset = Rol.objects.filter(categoria__in=EMPLEADO_CATEGORIAS)
-
-
-class PacienteRegistroForm(_RegistroUsuarioBaseForm):
-    """R003 — Recepcionista registra pacientes. Solo rol Cliente/Paciente."""
-
-    roles_queryset = Rol.objects.filter(categoria=Rol.Categoria.CLIENTE_PACIENTE)
 
 
 class _EditarPersonaBaseForm(forms.ModelForm):
@@ -146,30 +117,9 @@ class _EditarPersonaBaseForm(forms.ModelForm):
         return persona
 
 
-class AdminEditarUsuarioForm(_EditarPersonaBaseForm):
-    """R004 — Admin edita cualquier usuario, con cualquier rol."""
-
-    roles_queryset = Rol.objects.all()
-
-
-class EmpleadoEditForm(_EditarPersonaBaseForm):
-    """R003 — Administrativo edita empleados, solo roles de empleado."""
-
-    roles_queryset = Rol.objects.filter(categoria__in=EMPLEADO_CATEGORIAS)
-
-
 class ConvenioForm(forms.ModelForm):
+    """Form del modelo `Convenio` -- compartido: lo usan Admin y Gerente."""
+
     class Meta:
         model = Convenio
         fields = ['nombre', 'nit', 'telefono', 'especialidad']
-
-
-class SolicitudRegistroPacienteForm(forms.ModelForm):
-    """Médico pide que Recepcionista registre a alguien no encontrado
-    en la búsqueda de pacientes (caso de urgencia)."""
-
-    class Meta:
-        model = SolicitudRegistroPaciente
-        fields = ['nombre', 'apellido', 'cedula', 'motivo']
-        widgets = {'motivo': forms.Textarea(attrs={'rows': 2})}
-

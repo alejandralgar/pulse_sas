@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Cita
+from pulse_sas.internal.pulse_sas.citas.models import Cita
 
 
 HORAS_DISPONIBLES = [
