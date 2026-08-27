@@ -1,17 +1,16 @@
-import json
 from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 
+from pulse_sas.internal.pulse_sas.citas.models import Cita, CitaHistorial
+
 from .forms import SolicitarCitaForm
-from .models import Cita
-
-
-from django.utils import timezone
 
 
 @login_required
@@ -108,10 +107,6 @@ def horarios_disponibles(request):
 @login_required
 def modificar_cita(request, cita_id):
     """Permite al cliente modificar/reprogramar una cita pendiente o confirmada."""
-    from django.shortcuts import get_object_or_404
-    from django.urls import reverse
-    from .models import CitaHistorial
-
     try:
         persona = request.user.persona
     except Exception:
@@ -186,10 +181,6 @@ def modificar_cita(request, cita_id):
 @login_required
 def cancelar_cita(request, cita_id):
     """Permite al cliente cancelar una cita pendiente, confirmada o reprogramada."""
-    from django.shortcuts import get_object_or_404
-    from django.urls import reverse
-    from .models import CitaHistorial
-
     try:
         persona = request.user.persona
     except Exception:
@@ -218,4 +209,3 @@ def cancelar_cita(request, cita_id):
 
     messages.success(request, f'La cita #{cita.pk} ha sido cancelada exitosamente.')
     return redirect(reverse('dashboard_cliente') + '?seccion=miscitas')
-

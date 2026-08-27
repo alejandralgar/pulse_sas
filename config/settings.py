@@ -42,6 +42,14 @@ INSTALLED_APPS = [
     'pulse_sas.internal.pulse_sas.accounts',
     'pulse_sas.internal.pulse_sas.personas',
     'pulse_sas.internal.pulse_sas.citas',
+    'pulse_sas.internal.pulse_sas.admin_rol',
+    'pulse_sas.internal.pulse_sas.gerente',
+    'pulse_sas.internal.pulse_sas.recepcionista',
+    'pulse_sas.internal.pulse_sas.medico',
+    'pulse_sas.internal.pulse_sas.enfermera',
+    'pulse_sas.internal.pulse_sas.guardia',
+    'pulse_sas.internal.pulse_sas.empresa',
+    'pulse_sas.internal.pulse_sas.cliente',
 ]
 
 MIDDLEWARE = [
